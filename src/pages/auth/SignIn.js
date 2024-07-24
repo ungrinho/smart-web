@@ -1,35 +1,16 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, setPersistence, onAuthStateChanged, browserSessionPersistence } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, setPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import styled from 'styled-components';
 import ErrorMessage from '../../components/ErrorMessage';
-import axios from 'axios';
 import { AuthContext } from '../../contexts/AuthContext';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
+import FormControl from '@mui/material/FormControl';
 
-
-const LoginContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-`;
-
-const Input = styled.input`
-  margin: 10px 0;
-  padding: 10px;
-  width: 300px;
-`;
-
-const Button = styled.button`
-  margin: 10px 0;
-  padding: 10px;
-  width: 300px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-`;
 
 const LoginPage = React.memo(() => {
   const [email, setEmail] = useState('');
@@ -38,35 +19,31 @@ const LoginPage = React.memo(() => {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
-    
-  const { user } = useContext(AuthContext)
+
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
-
-    console.log("혹시 로그인한 사람 있음?", user)
-    setCurrentUser(user)
-
-  }, [])
+    console.log("혹시 로그인한 사람 있음?", user);
+    setCurrentUser(user);
+  }, [user]);
 
   const handleLogin = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
     setLoading(true);
     setPersistence(auth, browserSessionPersistence)
       .then(() => {
         console.log(email, password);
-        signInWithEmailAndPassword(auth, email, password).then((user) => {
-          console.log(user);
-          navigate("/main");
-        }).catch((error) => {
-          console.error('Error signing in:', error);
-          setError('아이디나 비밀번호가 잘못되었습니다. 다시 시도해주세요.');
-        }).finally(() => {
-          setLoading(false);
-        });
+        return signInWithEmailAndPassword(auth, email, password);
+      })
+      .then((user) => {
+        console.log(user);
+        navigate("/main");
       })
       .catch((error) => {
-        console.error('Error setting persistence:', error);
-        setError('로그인 중 오류가 발생했습니다.');
+        console.error('Error signing in:', error);
+        setError('아이디나 비밀번호가 잘못되었습니다. 다시 시도해주세요.');
+      })
+      .finally(() => {
         setLoading(false);
       });
   };
@@ -87,30 +64,64 @@ const LoginPage = React.memo(() => {
   };
 
   return (
-    <LoginContainer>
-      <h2>농장 관리 웹페이지</h2>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}> 
+      <h2>SmartFarm</h2>
 
       {error && <ErrorMessage message={error} />}
       <form onSubmit={handleLogin}>
-        <Input
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button type="submit">로그인</Button>
-      </form>
-      <Button onClick={handleGoogleLogin}>구글로 로그인</Button>
-      <Link to="/signup">
-        <Button>회원가입</Button>
-      </Link>
-    </LoginContainer>
+        <Box
+          sx={{
+            marginTop: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+          noValidate
+          autoComplete="off"
+        >
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <TextField
+              id="filled-textarea"
+              type="email"
+              label="E-Mail"
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              variant="filled"
+              sx={{
+                width: 500,
+                maxWidth: '100%',
+              }}
+            />
+          </FormControl>
+          <FormControl fullWidth>
+            <TextField
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              id="filled-textarea"
+              label="Password"
+              variant="filled"
+              sx={{
+                width: 500,
+                maxWidth: '100%',
+              }}
+            />
+          </FormControl>
+        </Box>
+        <Stack dircetion="column" spacing={2}>
+          <Button type="submit" fullWidth sx={{ mt: 3, mb: 2 }} variant="contained" size='large'>Sign In</Button>
+          <Button onClick={handleGoogleLogin} fullWidth sx={{ mt: 3, mb: 2 }} variant="outlined">Login With Google</Button>
+          <Grid item>
+            <Link to="/signup" variant="body2">
+              {"Don't have an account? Sign Up"}
+            </Link>
+          </Grid>
+        </Stack>
+      </form>         
+    </div>
+    
   );
 });
 

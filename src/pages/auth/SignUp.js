@@ -1,36 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import styled from 'styled-components';
+import { FormControl, TextField } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
 
-const SignupContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-`;
 
-const Input = styled.input`
-  margin: 10px 0;
-  padding: 10px;
-  width: 300px;
-`;
-
-const Button = styled.button`
-  margin: 10px 0;
-  padding: 10px;
-  width: 300px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-`;
 
 function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();  // useHistory 대신 useNavigate 사용
+  const navigate = useNavigate();  
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -38,31 +21,67 @@ function SignUp() {
       await createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
         console.log(userCredential)
       })
-      navigate('/main');  // history.push 대신 navigate 사용
+      navigate('/main'); 
     } catch (error) {
       console.error('회원가입 에러:', error);
     }
   };
 
   return (
-    <SignupContainer>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}>
       <h2>회원가입</h2>
       <form onSubmit={handleSignup}>
-        <Input
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button type="submit">회원가입</Button>
+      <Box
+          // component="form"
+          sx={{
+            marginTop: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+          noValidate
+          autoComplete="off"
+        >
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <TextField
+            type="email"
+            label="E-Mail"
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            variant="filled"
+            sx={{
+              width: 500,
+              maxWidth: '100%',
+            }}
+          />
+        </FormControl>
+        <FormControl fullWidth>
+          <TextField
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            id="filled-textarea"
+            label="Password"
+            variant="filled"
+            sx={{
+              width: 500,
+              maxWidth: '100%',
+            }}
+          />
+        </ FormControl>
+      </Box>
+        <Stack direction="column" spacing={2}>
+          <Button type="submit" fullWidth sx={{ mt: 3, mb: 2 }} variant="contained" size='large'>Sign Up</Button>
+          <Grid item>
+                  <Link to="/signin" variant="body2">
+                    {"You have an account already? Sign In"}
+                  </Link>
+            </Grid>
+        </Stack>
       </form>
-    </SignupContainer>
+    </div>
   );
 }
 

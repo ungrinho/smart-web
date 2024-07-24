@@ -1,19 +1,20 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyC-DATrhSpr2lJ-_UZ-qtj2y4vNg4N8VPs",
-  authDomain: "smartfarm-image-f87b3.firebaseapp.com",
-  projectId: "smartfarm-image-f87b3",
-  storageBucket: "smartfarm-image-f87b3.appspot.com",
-  messagingSenderId: "285795461096",
-  appId: "1:285795461096:web:f8dcef6f51417c33f1665d",
-  measurementId: "G-C1W5MXQTH5"
+  apiKey: "AIzaSyB42wihw54cts78k4H8XRrJjm8Lmjvek20",
+  authDomain: "web-login-c3046.firebaseapp.com",
+  projectId: "web-login-c3046",
+  storageBucket: "web-login-c3046.appspot.com",
+  messagingSenderId: "176109342044",
+  appId: "1:176109342044:web:cb32fe8c2c69862de78599",
+  measurementId: "G-KPXFYC82V6"
 };
 
 // 파이어베이스 초기화
@@ -24,5 +25,10 @@ const app = initializeApp(firebaseConfig);
 // 인증 SDK 추가
 // export const auth = getAuth(app);
 const auth = getAuth(app);
+
+
+
+const analytics = getAnalytics(app);
+
 
 export { auth };

@@ -1,5 +1,235 @@
-import * as React from 'react';
+// import React, { useEffect } from 'react';
+// import { styled, useTheme } from '@mui/material/styles';
+// import { auth } from '../config/firebase';
+// import { useNavigate } from 'react-router-dom';
+// import { onAuthStateChanged, signOut } from 'firebase/auth';
+// import Box from '@mui/material/Box';
+// import MuiDrawer from '@mui/material/Drawer';
+// import MuiAppBar from '@mui/material/AppBar';
+// import Toolbar from '@mui/material/Toolbar';
+// import List from '@mui/material/List';
+// import CssBaseline from '@mui/material/CssBaseline';
+// import Typography from '@mui/material/Typography';
+// import Divider from '@mui/material/Divider';
+// import IconButton from '@mui/material/IconButton';
+// import MenuIcon from '@mui/icons-material/Menu';
+// import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+// import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+// import ListItem from '@mui/material/ListItem';
+// import ListItemButton from '@mui/material/ListItemButton';
+// import ListItemIcon from '@mui/material/ListItemIcon';
+// import ListItemText from '@mui/material/ListItemText';
+// import ControlCameraIcon from '@mui/icons-material/ControlCamera';
+// import NotificationsIcon from '@mui/icons-material/Notifications';
+// import ChatIcon from '@mui/icons-material/Chat';
+// import Badge from '@mui/material/Badge';
+// import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+// import LogoutIcon from '@mui/icons-material/Logout';
+// import HomeIcon from '@mui/icons-material/Home';
+// import Drawer from '@mui/joy/Drawer';
+
+
+// const drawerWidth = 240;   // Drawer의 너비를 정의합니다
+
+// const openedMixin = (theme) => ({
+//   width: drawerWidth,
+//   transition: theme.transitions.create('width', {
+//     easing: theme.transitions.easing.sharp,
+//     duration: theme.transitions.duration.enteringScreen,
+//   }),
+//   overflowX: 'hidden',
+// });
+
+// const closedMixin = (theme) => ({
+//   transition: theme.transitions.create('width', {
+//     easing: theme.transitions.easing.sharp,
+//     duration: theme.transitions.duration.leavingScreen,
+//   }),
+//   overflowX: 'hidden',
+//   width: `calc(${theme.spacing(7)} + 1px)`,
+//   [theme.breakpoints.up('sm')]: {
+//     width: `calc(${theme.spacing(8)} + 1px)`,
+//   },
+// });
+
+// export const DrawerHeader = styled('div')(({ theme }) => ({
+//   display: 'flex',
+//   alignItems: 'center',
+//   justifyContent: 'flex-end',
+//   padding: theme.spacing(0, 1),
+//   // necessary for content to be below app bar
+//   ...theme.mixins.toolbar,
+// }));
+
+// const AppBar = styled(MuiAppBar, {
+//   shouldForwardProp: (prop) => prop !== 'open',
+// })(({ theme, open }) => ({
+//   zIndex: theme.zIndex.drawer + 1,
+//   transition: theme.transitions.create(['width', 'margin'], {
+//     easing: theme.transitions.easing.sharp,
+//     duration: theme.transitions.duration.leavingScreen,
+//   }),
+//   ...(open && {
+//     marginLeft: drawerWidth,
+//     width: `calc(100% - ${drawerWidth}px)`,
+//     transition: theme.transitions.create(['width', 'margin'], {
+//       easing: theme.transitions.easing.sharp,
+//       duration: theme.transitions.duration.enteringScreen,
+//     }),
+//   }),
+// }));
+
+// const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+//   ({ theme, open }) => ({
+//     width: drawerWidth,
+//     flexShrink: 0,
+//     whiteSpace: 'nowrap',
+//     boxSizing: 'border-box',
+//     ...(open && {
+//       ...openedMixin(theme),
+//       '& .MuiDrawer-paper': openedMixin(theme),
+//     }),
+//     ...(!open && {
+//       ...closedMixin(theme),
+//       '& .MuiDrawer-paper': closedMixin(theme),
+//     }),
+//   }),
+// );
+
+// export default function MiniDrawer({ children }) {
+//   const theme = useTheme();
+//   const [open, setOpen] = React.useState(false);
+//   const navigate = useNavigate();
+
+//   const handleDrawerOpen = () => {
+//     setOpen(true);
+//   };
+
+//   const handleDrawerClose = () => {
+//     setOpen(false);
+//   };
+
+//   // 로그아웃 함수
+//   const onLogoutClick = async () => {
+//     try {
+//       await signOut(auth);
+//       navigate('/');
+//     } catch (error) {
+//       console.error("로그아웃 중 오류 발생:", error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     onAuthStateChanged(auth, (user) => {
+//       if (user) {
+//         console.log("현재 로그인 중인 유저의 uid :", user.uid)
+//         localStorage.setItem("uid", user.uid)
+//       } else {
+//         console.log("로그인 유저가 없습니다!")
+//         localStorage.setItem("uid", null)
+//       }
+//     });
+//   }, [])
+
+//   return (
+//     <Box sx={{ display: 'flex' }}>
+//       <CssBaseline />
+//       <AppBar position="fixed" open={open}>
+//         <Toolbar>
+//           <IconButton
+//             color="inherit"
+//             aria-label="open drawer"
+//             onClick={handleDrawerOpen}
+//             edge="start"
+//             sx={{
+//               marginRight: 5,
+//               ...(open && { display: 'none' }),
+//             }}
+//           >
+//             <MenuIcon />
+//           </IconButton>
+//           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+//             Farm Management
+//           </Typography>
+//           <IconButton color="inherit">
+//             <Badge badgeContent={1} color="secondary">
+//               <NotificationsIcon />
+//             </Badge>
+//           </IconButton>
+//         </Toolbar>
+//       </AppBar>
+//       <Drawer variant="permanent" open={open}>
+//       <DrawerHeader>
+//            <IconButton onClick={handleDrawerClose}>
+//              {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+//            </IconButton>
+//          </DrawerHeader>
+//          <Divider />
+//          {/* 아래가 메뉴바 목록 */}
+//          <List>
+//            {['홈', '객체 확인 페이지', '관리페이지', '고객 문의',].map((text, index) => (
+//              <ListItem key={text} disablePadding sx={{ display: 'block' }}>
+//                <ListItemButton
+//                  sx={{
+//                    minHeight: 48,
+//                    justifyContent: open ? 'initial' : 'center',
+//                    px: 2.5,
+//                  }}
+//                >
+//                  <ListItemIcon
+//                    sx={{
+//                      minWidth: 0,
+//                      mr: open ? 3 : 'auto',
+//                      justifyContent: 'center',
+//                    }}
+//                  >  
+//                   {index === 0 ? <HomeIcon /> :
+//                    index === 1 ? <ControlCameraIcon /> : 
+//                    index === 2 ? <FormatListBulletedIcon /> :
+//                    <ChatIcon />}
+//                  </ListItemIcon>
+//                  <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+//                </ListItemButton>
+//              </ListItem>
+//            ))}
+//          </List>
+//          <Divider />
+//          <ListItem sx={{ justifyContent: 'center' }}>
+//            {open ? 
+//            <button size="small" onClick={onLogoutClick}>Sign Out</button> :
+//            <button size="small" className="thin" onClick={onLogoutClick}>
+//             <LogoutIcon />
+//            </button>
+//            }
+//          </ListItem>
+//       </Drawer>
+//       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+//         <DrawerHeader />
+//         {children}   {/* 자식 컴포넌트를 렌더링합니다. */}
+//       </Box>
+//     </Box>
+//   );
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
+import { auth } from '../config/firebase';
+import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar from '@mui/material/AppBar';
@@ -16,10 +246,16 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
+import ControlCameraIcon from '@mui/icons-material/ControlCamera';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import ChatIcon from '@mui/icons-material/Chat';
+import Badge from '@mui/material/Badge';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import LogoutIcon from '@mui/icons-material/Logout';
+import HomeIcon from '@mui/icons-material/Home';
+// import Drawer from '@mui/joy/Drawer';  // '@mui/joy'로부터 Drawer 컴포넌트를 JoyDrawer로 재명명하여 가져옵니다.
 
-const drawerWidth = 240;
+const drawerWidth = 240;  
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -42,12 +278,12 @@ const closedMixin = (theme) => ({
   },
 });
 
-const DrawerHeader = styled('div')(({ theme }) => ({
+export const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
+  // 앱 바 아래에 컨텐츠가 있도록 하는 데 필요합니다.
   ...theme.mixins.toolbar,
 }));
 
@@ -69,7 +305,8 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+// styled를 사용하여 MuiDrawer를 커스터마이징하고, 새로운 StyledDrawer 컴포넌트를 정의합니다.
+const StyledDrawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     width: drawerWidth,
     flexShrink: 0,
@@ -86,17 +323,42 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-export default function MiniDrawer() {
-  const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+// MiniDrawer 컴포넌트는 애플리케이션의 기본 레이아웃을 담당합니다.
+export default function MiniDrawer({ children }) {
+  const theme = useTheme();  // MUI 테마를 가져옵니다.
+  const [open, setOpen] = React.useState(false);  // Drawer의 열림 상태를 관리하는 상태 변수입니다.
+  const navigate = useNavigate();  // 페이지 네비게이션을 위해 useNavigate 훅을 사용합니다.
 
   const handleDrawerOpen = () => {
-    setOpen(true);
+    setOpen(true);  // Drawer를 여는 함수입니다.
   };
 
   const handleDrawerClose = () => {
-    setOpen(false);
+    setOpen(false);  // Drawer를 닫는 함수입니다.
   };
+
+  // 로그아웃 함수
+  const onLogoutClick = async () => {
+    try {
+      await signOut(auth);  // Firebase 인증에서 로그아웃합니다.
+      navigate('/');  // 로그아웃 후 홈으로 이동합니다.
+    } catch (error) {
+      console.error("로그아웃 중 오류 발생:", error);  // 로그아웃 중 에러가 발생하면 콘솔에 출력합니다.
+    }
+  };
+
+  useEffect(() => {
+    // 사용자의 인증 상태 변화를 감지합니다.
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("현재 로그인 중인 유저의 uid :", user.uid);
+        localStorage.setItem("uid", user.uid);  // 사용자 uid를 로컬 스토리지에 저장합니다.
+      } else {
+        console.log("로그인 유저가 없습니다!");
+        localStorage.setItem("uid", null);  // 사용자가 없으면 uid를 null로 설정합니다.
+      }
+    });
+  }, []);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -115,20 +377,26 @@ export default function MiniDrawer() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Mini variant drawer
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Farm Management
           </Typography>
+          <IconButton color="inherit">
+            <Badge badgeContent={1} color="secondary">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
         </Toolbar>
       </AppBar>
-      <Drawer variant="permanent" open={open}>
+      <StyledDrawer variant="permanent" open={open}>
         <DrawerHeader>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </DrawerHeader>
         <Divider />
+        {/* 메뉴 항목 */}
         <List>
-          {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+          {['홈', '객체 확인 페이지', '관리페이지', '고객 문의'].map((text, index) => (
             <ListItem key={text} disablePadding sx={{ display: 'block' }}>
               <ListItemButton
                 sx={{
@@ -144,7 +412,10 @@ export default function MiniDrawer() {
                     justifyContent: 'center',
                   }}
                 >
-                  {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                  {index === 0 ? <HomeIcon /> :
+                   index === 1 ? <ControlCameraIcon /> : 
+                   index === 2 ? <FormatListBulletedIcon /> :
+                   <ChatIcon />}
                 </ListItemIcon>
                 <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
               </ListItemButton>
@@ -152,61 +423,19 @@ export default function MiniDrawer() {
           ))}
         </List>
         <Divider />
-        <List>
-          {['All mail', 'Trash', 'Spam'].map((text, index) => (
-            <ListItem key={text} disablePadding sx={{ display: 'block' }}>
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: open ? 'initial' : 'center',
-                  px: 2.5,
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                </ListItemIcon>
-                <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
+        <ListItem sx={{ justifyContent: 'center' }}>
+          {open ? 
+            <button size="small" onClick={onLogoutClick}>Sign Out</button> :
+            <button size="small" className="thin" onClick={onLogoutClick}>
+              <LogoutIcon />
+            </button>
+          }
+        </ListItem>
+      </StyledDrawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        <Typography paragraph>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
-          enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
-          imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-          Convallis convallis tellus id interdum velit laoreet id donec ultrices.
-          Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-          adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-          nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-          leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-          feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-          consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-          sapien faucibus et molestie ac.
-        </Typography>
-        <Typography paragraph>
-          Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-          eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-          neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-          tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-          sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-          tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-          gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-          et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-          tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-          eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-          posuere sollicitudin aliquam ultrices sagittis orci a.
-        </Typography>
+        {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
       </Box>
     </Box>
   );
-}
+};
