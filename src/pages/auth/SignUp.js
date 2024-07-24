@@ -19,6 +19,7 @@ import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 import CustomButton from '../../components/CustomButton';
 
 
+
 const FormHelperTexts = styled(FormHelperText)`
   width: 100%;
   padding-left: 16px;
@@ -113,6 +114,7 @@ const SignUp = () => {
             alignItems: 'center',
           }}
         >
+
           <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }} />
           <Typography component="h1" variant="h5">
             Sign Up
