@@ -114,9 +114,10 @@ const LoginPage = React.memo(() => {
           <Button type="submit" fullWidth sx={{ mt: 3, mb: 2 }} variant="contained" size='large'>Sign In</Button>
           <Button onClick={handleGoogleLogin} fullWidth sx={{ mt: 3, mb: 2 }} variant="outlined">Login With Google</Button>
           <Grid item>
-            <Link to="/signup" variant="body2">
-              {"Don't have an account? Sign Up"}
-            </Link>
+            <span>Don't have an account? </span>
+                <Link to="/signup" variant="body2" style={{ textDecoration: 'underline', color:' blue'}}>
+                    <span>Sign Up</span>
+                </Link>
           </Grid>
         </Stack>
       </form>         

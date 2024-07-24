@@ -9,7 +9,6 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 
 
-
 function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,9 +74,10 @@ function SignUp() {
         <Stack direction="column" spacing={2}>
           <Button type="submit" fullWidth sx={{ mt: 3, mb: 2 }} variant="contained" size='large'>Sign Up</Button>
           <Grid item>
-                  <Link to="/signin" variant="body2">
-                    {"You have an account already? Sign In"}
-                  </Link>
+            <span>You have an account already? </span>
+              <Link to="/signin" variant="body2" style={{ textDecoration: 'none', color: 'black' }}>
+                <span style={{ textDecoration: 'underline', color: 'blue'}}>Sign In</span>
+              </Link>
             </Grid>
         </Stack>
       </form>
