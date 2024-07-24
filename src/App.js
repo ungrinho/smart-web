@@ -6,10 +6,11 @@ import Main from './pages/service/Main';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Drawer from './components/Drawer';
+import Object from './pages/service/Object';
 
 const AppContent = () => {
   const location = useLocation();
-
+  
   // SignIn과 SignUp 페이지에서는 Drawer를 렌더링하지 않음
   const shouldRenderDrawer = !['/signin', '/signup', '/'].includes(location.pathname);
 
@@ -19,6 +20,7 @@ const AppContent = () => {
         <Drawer>
           <Routes>
             <Route path="/main" element={<Main />} />
+            <Route path="/obj" element={<Object />} />
             {/* 다른 Drawer가 필요한 라우트들 */}
           </Routes>
         </Drawer>
@@ -33,13 +35,17 @@ const AppContent = () => {
   );
 };
 
+
+
 const App = () => {
   return (
+
     <AuthProvider>
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
     </AuthProvider>
+
   );
 };
 

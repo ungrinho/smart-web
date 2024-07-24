@@ -4,39 +4,63 @@ import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvide
 import { auth } from '../../config/firebase';
 import ErrorMessage from '../../components/ErrorMessage';
 import { AuthContext } from '../../contexts/AuthContext';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Grid from '@mui/material/Grid';
-import FormControl from '@mui/material/FormControl';
+import {
+  Avatar,
+  Button,
+  CssBaseline,
+  TextField,
+  Grid,
+  Box,
+  Typography,
+  Container,
+  createTheme,
+  ThemeProvider,
+  styled,
+  FormHelperText,
+  FormControl
+} from '@mui/material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import CustomButton from '../../components/CustomButton';
+
+
+
+
+const FormHelperTexts = styled(FormHelperText)`
+  width: 100%;
+  padding-left: 16px;
+  font-weight: 700 !important;
+  color: #d32f2f !important;
+`;
+
+const Boxs = styled(Box)`
+  padding-bottom: 40px !important;
+`;
 
 
 const LoginPage = React.memo(() => {
+  // 기본 테마 생성
+  const theme = createTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
     console.log("혹시 로그인한 사람 있음?", user);
-    setCurrentUser(user);
   }, [user]);
 
+  // 로그인 핸들러
   const handleLogin = (e) => {
-    e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
+    e.preventDefault();
     setLoading(true);
     setPersistence(auth, browserSessionPersistence)
       .then(() => {
-        console.log(email, password);
         return signInWithEmailAndPassword(auth, email, password);
       })
-      .then((user) => {
-        console.log(user);
+      .then(() => {
         navigate("/main");
       })
       .catch((error) => {
@@ -48,6 +72,7 @@ const LoginPage = React.memo(() => {
       });
   };
 
+  // Google 로그인 핸들러
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
@@ -64,65 +89,109 @@ const LoginPage = React.memo(() => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px' }}> 
-      <h2>SmartFarm</h2>
-
-      {error && <ErrorMessage message={error} />}
-      <form onSubmit={handleLogin}>
+    <ThemeProvider theme={theme}>
+      <Container component="main" maxWidth="xs">
+        <CssBaseline />
         <Box
           sx={{
-            marginTop: 3,
+            marginTop: 8,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
           }}
-          noValidate
-          autoComplete="off"
         >
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <TextField
-              id="filled-textarea"
-              type="email"
-              label="E-Mail"
-              placeholder="E-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              variant="filled"
-              sx={{
-                width: 500,
-                maxWidth: '100%',
-              }}
-            />
-          </FormControl>
-          <FormControl fullWidth>
-            <TextField
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              id="filled-textarea"
-              label="Password"
-              variant="filled"
-              sx={{
-                width: 500,
-                maxWidth: '100%',
-              }}
-            />
-          </FormControl>
+          {/* 로고 아바타 */}
+          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          
+          {/* 페이지 제목 */}
+          <Typography component="h1" variant="h5">
+            SmartFarm Login
+          </Typography>
+          
+          {/* 에러 메시지 표시 */}
+          {error && <ErrorMessage message={error} />}
+          
+          {/* 로그인 폼 */}
+          <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 3 }}>
+            {/* 이메일 입력 필드 */}
+            <FormControl component="fieldset" variant="standard">
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    autoComplete="email"
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Grid>
+                
+                {/* 비밀번호 입력 필드 */}
+                <Grid item xs={12}>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Password"
+                    type="password"
+                    id="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </Grid>
+                
+                {/* 로그인 버튼 */}
+                <Grid item xs={12}>
+                  <CustomButton
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                    disabled={loading}
+                  >
+                    Sign In
+                  </CustomButton>
+                </Grid>
+                
+                {/* Google 로그인 버튼 */}
+                <Grid item xs={12}> 
+                  <Button
+                    onClick={handleGoogleLogin}
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 1, mb: 2 }}
+                    disabled={loading}
+                  >
+                    Login With Google
+                  </Button>
+                </Grid>
+                
+                {/* 회원가입 링크 */}
+                <Grid container justifyContent="center">
+                  <Grid item>
+                    <span>Don't have an account? </span>
+                    <Link to="/signup" variant="body2" style={{ textDecoration: 'underline', color: 'blue' }}>
+                      <span>Sign Up</span>
+                    </Link>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </FormControl>
+          </Box>
         </Box>
-        <Stack dircetion="column" spacing={2}>
-          <Button type="submit" fullWidth sx={{ mt: 3, mb: 2 }} variant="contained" size='large'>Sign In</Button>
-          <Button onClick={handleGoogleLogin} fullWidth sx={{ mt: 3, mb: 2 }} variant="outlined">Login With Google</Button>
-          <Grid item>
-            <Link to="/signup" variant="body2">
-              {"Don't have an account? Sign Up"}
-            </Link>
-          </Grid>
-        </Stack>
-      </form>         
-    </div>
-    
+      </Container>
+    </ThemeProvider>
   );
 });
+  
 
 export default LoginPage;
