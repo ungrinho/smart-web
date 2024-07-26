@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { styled, useTheme, createTheme, ThemeProvider } from '@mui/material/styles';
 import { auth } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,7 @@ import Badge from '@mui/material/Badge';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
+import NotificationModal from './Modal';
 
 
 
@@ -114,10 +115,13 @@ const StyledDrawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== '
 
 
 // MiniDrawer 컴포넌트는 애플리케이션의 기본 레이아웃을 담당합니다.
+// export default function
 export default function MiniDrawer({ children }) {
   const theme = useTheme();  // MUI 테마를 가져옵니다.
   const [open, setOpen] = React.useState(false);  // Drawer의 열림 상태를 관리하는 상태 변수입니다.
   const navigate = useNavigate();  // 페이지 네비게이션을 위해 useNavigate 훅을 사용합니다.
+  const [notificationCount, setNotificationCount] = useState(4);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleDrawerOpen = () => {
     setOpen(true);  // Drawer를 여는 함수입니다.
@@ -126,6 +130,7 @@ export default function MiniDrawer({ children }) {
   const handleDrawerClose = () => {
     setOpen(false);  // Drawer를 닫는 함수입니다.
   };
+
 
   // 로그아웃 함수
   const onLogoutClick = async () => {
@@ -158,84 +163,119 @@ export default function MiniDrawer({ children }) {
     { text: '고객 문의', icon: <ChatIcon />, path: '/cs' },
   ];
 
+  // 알림 데이터
+  const notifications = [
+    { severity: 'success', title: '객체 탐지 완료!', message: '로봇이 순찰을 완료하였습니다.' },
+    { severity: 'info', title: '객체 이상 감지', message: '객체 이상을 감지하였습니다.' },
+    { severity: 'warning', title: '배터리 부족', message: '로봇의 배터리 잔량이 얼마 남지 않았습니다.' },
+    { severity: 'error', title: '배터리 방전', message: '로봇의 배터리가 방전되었습니다.' },
+  ];
+
+  // 모달을 여는 핸들러
+  const handleModalOpen = () => {
+    setModalOpen(true);
+    setNotificationCount(0); // 모달을 열 때 알림 카운트 리셋
+  };
+
+  // 모달을 닫는 핸들러
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+  
+  // 알림 버튼 클릭 핸들러 수정
+  const handleNotificationClick = () => {
+    // 모달의 상태를 토글합니다.
+    setModalOpen(prevState => !prevState);
+    // 모달이 열릴 때만 알림 카운트를 리셋합니다.
+    if (!modalOpen) {
+      setNotificationCount(0);
+    }
+  };
 
   return (
     <ThemeProvider theme={customTheme}>
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <AppBar position="fixed" open={open} sx={{ backgroundColor: 'primary.main' }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpen}
-            edge="start"
-            sx={{
-              marginRight: 5,
-              ...(open && { display: 'none' }),
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Farm Management
-          </Typography>
-          <IconButton color="inherit">
-            <Badge badgeContent={1} color="secondary">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <StyledDrawer variant="permanent" open={open}>
-        <DrawerHeader>
-          <IconButton onClick={handleDrawerClose}>
-            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </IconButton>
-        </DrawerHeader>
-        <Divider />
-        {/* 메뉴 항목 */}
-        <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: open ? 'initial' : 'center',
-                  px: 2.5,
-                }}
-                onClick={() => navigate(item.path)}
-              >
-                <ListItemIcon
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        <AppBar position="fixed" open={open} sx={{ backgroundColor: 'primary.main' }}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpen}
+              edge="start"
+              sx={{
+                marginRight: 5,
+                ...(open && { display: 'none' }),
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+              Farm Management
+            </Typography>
+             <IconButton color="inherit" onClick={handleModalOpen}> 
+              <Badge badgeContent={notificationCount} color="secondary">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+        <StyledDrawer variant="permanent" open={open}>
+          <DrawerHeader>
+            <IconButton onClick={handleDrawerClose}>
+              {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          </DrawerHeader>
+          <Divider />
+          {/* 메뉴 항목 */}
+          <List>
+            {menuItems.map((item) => (
+              <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                <ListItemButton
                   sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
+                    minHeight: 48,
+                    justifyContent: open ? 'initial' : 'center',
+                    px: 2.5,
                   }}
+                  onClick={() => navigate(item.path)}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <ListItem sx={{ justifyContent: 'center' }}>
-          {open ? 
-            <button size="small" onClick={onLogoutClick}>Sign Out</button> :
-            <button size="small" className="thin" onClick={onLogoutClick}>
-              <LogoutIcon />
-            </button>
-          }
-        </ListItem>
-      </StyledDrawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
-        <DrawerHeader />
-        {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 3 : 'auto',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <Divider />
+          <ListItem sx={{ justifyContent: 'center' }}>
+            {open ? 
+              <button size="small" onClick={onLogoutClick}>Sign Out</button> :
+              <button size="small" className="thin" onClick={onLogoutClick}>
+                <LogoutIcon />
+              </button>
+            }
+          </ListItem>
+        </StyledDrawer>
+        <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
+          <DrawerHeader />
+          {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
+        </Box>
+        <NotificationModal
+          open={modalOpen}
+          handleClose={handleModalClose}
+          notifications={notifications}
+        />
       </Box>
-    </Box>
+
     </ThemeProvider>
   
   );
-};
+}
+

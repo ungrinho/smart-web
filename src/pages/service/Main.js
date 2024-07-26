@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,8 +10,9 @@ import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import { CardActionArea } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Unstable_Grid2';
 import Box from '@mui/material/Box';
+import { AuthContext } from '../../contexts/AuthContext';
 
 
 const MainContainer = styled('div')({
@@ -51,6 +52,9 @@ const Main = React.memo(() => {
   const [error, setError] = useState(null);
   const wsRef = useRef(null);
   const reconnectAttempts = useRef(0);
+  const my_context = useContext(AuthContext);
+
+  console.log("my_context", my_context.user)
 
 
 
@@ -152,12 +156,13 @@ const Main = React.memo(() => {
     <MainContainer>
       <Content>
         <Header>
-          <input
+          {/* <input
             type="text"
             placeholder="농장 이름"
             value={farmName}
             onChange={(e) => setFarmName(e.target.value)}
-          />
+          /> */}
+          {my_context.user.email}의 농장
           {/* 알림바 있어야할 자리 */}
         </Header>
         <CardContainer>

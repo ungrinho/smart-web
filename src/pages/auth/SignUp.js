@@ -127,7 +127,7 @@ const SignUp = () => {
                     required
                     fullWidth
                     id="email"
-                    label="E-Mail"
+                    label="Email Address"
                     name="email"
                     autoComplete="email"
                     value={email}

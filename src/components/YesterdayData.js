@@ -11,16 +11,16 @@ function YesterdayData() {
       params:{
         uid: uid
       }
-    }).then((retval) => {
-      console.log("Read yesterday Data success!")
-      const avgTemperature = retval.data[0].avgTemperature.toFixed(2)
-      const avgHumidity = retval.data[0].avgHumidity.toFixed(2)
+    })
+    .then((retval) => {
+      console.log("success!", retval.data[0].avgHumidity)
       setYesterdayData({
-        avg_temperature: avgTemperature,
-        avg_humidity: avgHumidity
+        avg_temperature: retval.data[0].avgTemperature.toFixed(2),
+        avg_humidity: retval.data[0].avgHumidity.toFixed(2)
       })
+      console.log(avg_temperature)
     }).catch((retval) => {
-      console.log("Can not read yesterday Data", retval)
+      console.log("Error@@", retval)
     })
   }, []);
 

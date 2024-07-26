@@ -32,11 +32,6 @@ const FormHelperTexts = styled(FormHelperText)`
   color: #d32f2f !important;
 `;
 
-const Boxs = styled(Box)`
-  padding-bottom: 40px !important;
-`;
-
-
 const LoginPage = React.memo(() => {
   // 기본 테마 생성
   const theme = createTheme();
@@ -44,6 +39,8 @@ const LoginPage = React.memo(() => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const navigate = useNavigate();
 
   const { user } = useContext(AuthContext);
@@ -52,10 +49,24 @@ const LoginPage = React.memo(() => {
     console.log("혹시 로그인한 사람 있음?", user);
   }, [user]);
 
+  const validateEmail = (email) => {
+    const regex = /([\w-.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    return regex.test(email);
+  };
+
   // 로그인 핸들러
   const handleLogin = (e) => {
     e.preventDefault();
     setLoading(true);
+    setEmailError('');
+    setPasswordError('');
+
+    if (!validateEmail(email)) {
+      setEmailError('올바른 이메일 형식이 아닙니다.');
+      setLoading(false);
+      return;
+    }
+
     setPersistence(auth, browserSessionPersistence)
       .then(() => {
         return signInWithEmailAndPassword(auth, email, password);
@@ -65,7 +76,13 @@ const LoginPage = React.memo(() => {
       })
       .catch((error) => {
         console.error('Error signing in:', error);
-        setError('아이디나 비밀번호가 잘못되었습니다. 다시 시도해주세요.');
+        if (error.code === 'auth/wrong-password') {
+          setPasswordError('올바른 비밀번호가 아닙니다.');
+        } else if (error.code === 'auth/user-not-found') {
+          setEmailError('존재하지 않는 이메일입니다.');
+        } else {
+          setError('로그인에 실패했습니다. 다시 시도해주세요.');
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -130,7 +147,9 @@ const LoginPage = React.memo(() => {
                     autoFocus
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    error={!!emailError}
                   />
+                  {emailError && <FormHelperTexts>{emailError}</FormHelperTexts>}
                 </Grid>
                 
                 {/* 비밀번호 입력 필드 */}
@@ -146,7 +165,9 @@ const LoginPage = React.memo(() => {
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    error={!!passwordError}
                   />
+                  {passwordError && <FormHelperTexts>{passwordError}</FormHelperTexts>}
                 </Grid>
                 
                 {/* 로그인 버튼 */}

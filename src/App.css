@@ -87,3 +87,7 @@ button:hover {
 button.thin{
   padding: 5px 10px;
 }
+
+.css-i9fmh8-MuiBackdrop-root-MuiModal-backdrop{
+  background-color: transparent !important;
+}
