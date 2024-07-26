@@ -7,6 +7,8 @@ import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Drawer from './components/Drawer';
 import Object from './pages/service/Object';
+import CS from './pages/service/CS';
+import Manage from './pages/service/Manage';
 
 const AppContent = () => {
   const location = useLocation();
@@ -21,6 +23,8 @@ const AppContent = () => {
           <Routes>
             <Route path="/main" element={<Main />} />
             <Route path="/obj" element={<Object />} />
+            <Route path="/CS" element={<CS />} />
+            <Route path="/manage" element={<Manage />} />
             {/* 다른 Drawer가 필요한 라우트들 */}
           </Routes>
         </Drawer>

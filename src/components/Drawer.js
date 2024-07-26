@@ -122,6 +122,8 @@ export default function MiniDrawer({ children }) {
   const navigate = useNavigate();  // 페이지 네비게이션을 위해 useNavigate 훅을 사용합니다.
   const [notificationCount, setNotificationCount] = useState(4);
   const [modalOpen, setModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  
 
   const handleDrawerOpen = () => {
     setOpen(true);  // Drawer를 여는 함수입니다.
@@ -136,6 +138,7 @@ export default function MiniDrawer({ children }) {
   const onLogoutClick = async () => {
     try {
       await signOut(auth);  // Firebase 인증에서 로그아웃합니다.
+      setUser(null);  // 로그아웃 후 사용자 정보를 null로 설정합니다.
       navigate('/');  // 로그아웃 후 홈으로 이동합니다.
     } catch (error) {
       console.error("로그아웃 중 오류 발생:", error);  // 로그아웃 중 에러가 발생하면 콘솔에 출력합니다.
@@ -143,16 +146,18 @@ export default function MiniDrawer({ children }) {
   };
 
   useEffect(() => {
-    // 사용자의 인증 상태 변화를 감지합니다.
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("현재 로그인 중인 유저의 uid :", user.uid);
-        localStorage.setItem("uid", user.uid);  // 사용자 uid를 로컬 스토리지에 저장합니다.
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        console.log("현재 로그인 중인 유저의 uid :", currentUser.uid);
+        localStorage.setItem("uid", currentUser.uid);  // 사용자 uid를 로컬 스토리지에 저장합니다.
       } else {
         console.log("로그인 유저가 없습니다!");
         localStorage.setItem("uid", null);  // 사용자가 없으면 uid를 null로 설정합니다.
       }
     });
+  
+    return () => unsubscribe();
   }, []);
 
   // 메뉴 항목 정의
@@ -213,7 +218,7 @@ export default function MiniDrawer({ children }) {
             <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
               Farm Management
             </Typography>
-             <IconButton color="inherit" onClick={handleModalOpen}> 
+            <IconButton color="inherit" onClick={handleModalOpen}> 
               <Badge badgeContent={notificationCount} color="secondary">
                 <NotificationsIcon />
               </Badge>
@@ -262,6 +267,11 @@ export default function MiniDrawer({ children }) {
               </button>
             }
           </ListItem>
+          {/* {user && ( // user가 존재할 때만 사용자 정보를 표시합니다.
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body1">Email: {user.email}</Typography>
+            </Box>
+          )} */}
         </StyledDrawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
           <DrawerHeader />
@@ -273,9 +283,7 @@ export default function MiniDrawer({ children }) {
           notifications={notifications}
         />
       </Box>
-
     </ThemeProvider>
-  
   );
 }
 
