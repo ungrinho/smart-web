@@ -274,7 +274,6 @@ export default function MiniDrawer({ children }) {
           )} */}
         </StyledDrawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
-          <DrawerHeader />
           {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
         </Box>
         <NotificationModal
