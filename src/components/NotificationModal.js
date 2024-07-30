@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
-import { Modal, Box, Typography, Button, Alert, AlertTitle } from '@mui/material';
-import "../App.css"
+import React from 'react';
+import { Modal, Box, Typography, Alert, AlertTitle } from '@mui/material';
+import "../App.css";
 
 // 모달 스타일 정의 (구글 스타일 참고)
 const style = {
@@ -27,7 +27,7 @@ const getOpenStyle = (isOpen) => ({
 });
 
 // 알림 모달 컴포넌트
-const NotificationModal = ({ open, handleClose, notifications }) => {
+const NotificationModal = ({ open, handleClose, notifications = [] }) => {
   return (
     <Modal
       open={open}

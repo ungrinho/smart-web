@@ -1,6 +1,5 @@
 #######   npm install @emailjs/browser --force  #########
-
-
+#######   npm install chart.js react-chartjs-2  #########
 
 
 

@@ -284,7 +284,7 @@ export const CS = () => {
     }
 
     if (!checked) {
-      setCheckedError('회원가입 약관에 동의해주세요.');
+      setCheckedError('약관에 동의해주세요.');
       isValid = false;
     } else {
       setCheckedError('');

@@ -26,7 +26,7 @@ import Badge from '@mui/material/Badge';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
-import NotificationModal from './Modal';
+import NotificationModal from './NotificationModal';
 
 
 
