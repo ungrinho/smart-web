@@ -86,13 +86,12 @@
 
 
 
-
 import React, { useState, useEffect } from 'react';
-import { Card, useMediaQuery } from '@mui/material';
-import { styled, useTheme } from '@mui/material/styles';
+import { Card } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Button from '@mui/material/Button';
+import Button from '@mui/material/Button'
 
 // 반응형 스타일 적용
 const MainContainer = styled('div')(({ theme }) => ({
@@ -104,6 +103,27 @@ const MainContainer = styled('div')(({ theme }) => ({
     padding: theme.spacing(1),
   },
 }));
+
+const ControlPanel = styled('div')({
+  position: 'absolute',
+  top: '80%',
+  left: '20px',
+  transform: 'translateY(-50%)',
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, 1fr)',
+  gridTemplateRows: 'repeat(3, 1fr)',
+  gap: '10px',
+  width: '200px',
+  height: '200px',
+  zIndex: 1,
+});
+
+const ControlButton = styled(Button)({
+  minWidth: '100px',
+  height: '40px',
+  fontSize: '15px',
+  opacity: '0.5'
+});
 
 const CardContainer = styled('div')(({ theme }) => ({
   display: 'grid',
@@ -120,7 +140,7 @@ function Manage() {
   const [alignment, setAlignment] = React.useState('auto');
   const [currentImage, setCurrentImage] = React.useState('http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw');
   const [handsOn, setHandsOn] = React.useState(<Card></Card>);
-
+  const [controlPanel, setControlPanel] = React.useState(false);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -130,6 +150,7 @@ function Manage() {
       'http://192.168.137.139:8080/stream?topic=/usb_cam1/image_raw' :
       'http://192.168.137.139:8080/stream?topic=/usb_cam2/image_raw'
     )
+    setControlPanel(alignment === 'control')
   }, [alignment]);
 
   const handleChange = (event, newAlignment) => {
@@ -153,7 +174,7 @@ function Manage() {
       </ToggleButtonGroup>
       <br />
       <CardContainer>
-        <Card style={{ width: '100%', textAlign: 'center' }}>
+        <Card style={{ width: '100%', height: '600px', textAlign: 'center' }}>
           <img 
             src={currentImage}
             alt='영상'
@@ -161,12 +182,35 @@ function Manage() {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </Card>
-        <Card>
-          {/* 여기에 핸즈온 컨트롤 내용 추가 */}
-        </Card>
+        {alignment === 'control' && (
+          <ControlPanel>
+              <div></div>
+              <ControlButton variant="contained">▲</ControlButton>
+              <div></div>
+              <ControlButton variant="contained">◀</ControlButton>
+              <ControlButton variant="contained">STOP</ControlButton>
+              <ControlButton variant="contained">▶</ControlButton>
+              <div></div>
+              <ControlButton variant="contained">▼</ControlButton>
+              <div></div>
+            </ControlPanel>
+        )}
       </CardContainer>
     </MainContainer>
   )
 }
 
 export default Manage;
+
+
+
+
+
+
+
+
+
+
+
+
+
