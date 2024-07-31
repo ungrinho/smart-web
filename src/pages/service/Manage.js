@@ -9,6 +9,7 @@ import ROSLIB from 'roslib';
 const MainContainer = styled('div')({
     display: 'flex',
     flexDirection: 'column',
+    padding: '100px 20px 20px',
 });
 
 const CardContainer = styled('div')({

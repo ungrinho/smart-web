@@ -125,14 +125,17 @@ export default function MiniDrawer({ children }) {
   const [user, setUser] = useState(null);
   
 
-  const handleDrawerOpen = () => {
-    setOpen(true);  // Drawer를 여는 함수입니다.
-  };
+  // const handleDrawerOpen = () => {
+  //   setOpen(true);  // Drawer를 여는 함수입니다.
+  // };
 
-  const handleDrawerClose = () => {
-    setOpen(false);  // Drawer를 닫는 함수입니다.
-  };
+  // const handleDrawerClose = () => {
+  //   setOpen(false);  // Drawer를 닫는 함수입니다.
+  // };
 
+  // Drawer 열기/닫기 핸들러
+  const handleDrawerOpen = () => setOpen(true);
+  const handleDrawerClose = () => setOpen(false);  
 
   // 로그아웃 함수
   const onLogoutClick = async () => {
@@ -153,7 +156,8 @@ export default function MiniDrawer({ children }) {
         localStorage.setItem("uid", currentUser.uid);  // 사용자 uid를 로컬 스토리지에 저장합니다.
       } else {
         console.log("로그인 유저가 없습니다!");
-        localStorage.setItem("uid", null);  // 사용자가 없으면 uid를 null로 설정합니다.
+        // localStorage.setItem("uid", null);  // 사용자가 없으면 uid를 null로 설정합니다.
+        localStorage.removeItem("uid");
       }
     });
   
@@ -183,9 +187,10 @@ export default function MiniDrawer({ children }) {
   };
 
   // 모달을 닫는 핸들러
-  const handleModalClose = () => {
-    setModalOpen(false);
-  };
+  // const handleModalClose = () => {
+  //   setModalOpen(false);
+  // };
+  const handleModalClose = () => setModalOpen(false);
   
   // 알림 버튼 클릭 핸들러 수정
   const handleNotificationClick = () => {
@@ -272,6 +277,14 @@ export default function MiniDrawer({ children }) {
               <Typography variant="body1">Email: {user.email}</Typography>
             </Box>
           )} */}
+          {/* // user가 존재할 때만 사용자 정보를 표시합니다.
+          {user && (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2">
+                {user.email ? `Logged in as: ${user.email}` : 'User logged in'}
+              </Typography>
+            </Box>
+          )} */}
         </StyledDrawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
           {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
@@ -285,4 +298,5 @@ export default function MiniDrawer({ children }) {
     </ThemeProvider>
   );
 }
+
 

@@ -330,7 +330,7 @@ import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import YesterdayData from '../../components/YesterdayData';
+// import YesterdayData from '../../components/YesterdayData';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
@@ -388,6 +388,7 @@ const Main = React.memo(() => {
   const my_context = useContext(AuthContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [yesterdayData, setYesterdayData] = useState({ avg_temperature: null, avg_humidity: null });
 
   console.log("my_context", my_context.user)
 
@@ -503,6 +504,31 @@ const Main = React.memo(() => {
     setSnackbarOpen(false);
   };
 
+  
+  useEffect(() => {
+    const { avg_temperature, avg_humidity } = yesterdayData
+    const uid = localStorage.getItem('uid');
+    axios.get('http://localhost:8080/api/yesterdaySummary', {
+      params:{
+        uid: uid
+      }
+    })
+    .then((retval) => {
+      console.log("success!", retval.data[0].avgHumidity)
+      setYesterdayData({
+        avg_temperature: retval.data[0].avgTemperature.toFixed(2),
+        avg_humidity: retval.data[0].avgHumidity.toFixed(2)
+      })
+      console.log(avg_temperature)
+    }).catch((retval) => {
+      console.log("Error@@", retval)
+    })
+  }, []);
+
+  if (!yesterdayData) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <MainContainer>
       <Content>
@@ -538,12 +564,18 @@ const Main = React.memo(() => {
                       <Typography gutterBottom variant="h5" component="div">
                         전날 평균 온습도
                       </Typography>
-                      <YesterdayData />
+                      <br></br>
+                      <Typography variant="body2" color="text.secondary">
+                        온도: {yesterdayData.avg_temperature}°C
+                      </Typography>
+                      <br></br>
+                      <Typography variant="body2" color="text.secondary">
+                        습도: {yesterdayData.avg_humidity}%
+                      </Typography>
                     </CardContent>
                   </CardActionArea>
                 </Card>
               </Grid>
-              {/* <Gsrid item xs={8} md={4}> */}
               <Grid item xs={4} sm={4} md={4}>
                 <Card>
                   <CardActionArea>

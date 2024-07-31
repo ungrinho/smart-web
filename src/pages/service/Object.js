@@ -240,6 +240,7 @@ const MainContainer = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   padding: theme.spacing(2),
+  padding: '100px 20px 20px',
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(1),
   },
