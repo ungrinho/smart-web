@@ -27,6 +27,7 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import NotificationModal from './NotificationModal';
+// import ROSAlarm from './ROSAlarm';
 
 
 
@@ -123,15 +124,13 @@ export default function MiniDrawer({ children }) {
   const [notificationCount, setNotificationCount] = useState(4);
   const [modalOpen, setModalOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   
 
-  // const handleDrawerOpen = () => {
-  //   setOpen(true);  // Drawer를 여는 함수입니다.
-  // };
-
-  // const handleDrawerClose = () => {
-  //   setOpen(false);  // Drawer를 닫는 함수입니다.
-  // };
+  const addNotification = (newNotification) => {
+    setNotifications(prev => [...prev, newNotification]);
+    setNotificationCount(prev => prev + 1);
+  };
 
   // Drawer 열기/닫기 핸들러
   const handleDrawerOpen = () => setOpen(true);
@@ -172,13 +171,13 @@ export default function MiniDrawer({ children }) {
     { text: '고객 문의', icon: <ChatIcon />, path: '/cs' },
   ];
 
-  // 알림 데이터
-  const notifications = [
-    { severity: 'success', title: '객체 탐지 완료!', message: '로봇이 순찰을 완료하였습니다.' },
-    { severity: 'info', title: '객체 이상 감지', message: '객체 이상을 감지하였습니다.' },
-    { severity: 'warning', title: '배터리 부족', message: '로봇의 배터리 잔량이 얼마 남지 않았습니다.' },
-    { severity: 'error', title: '배터리 방전', message: '로봇의 배터리가 방전되었습니다.' },
-  ];
+  // // 알림 데이터
+  // const notifications = [
+  //   { severity: 'success', title: '객체 탐지 완료!', message: '로봇이 순찰을 완료하였습니다. 총 n개의 이상이 감지되었습니다.' },
+  //   { severity: 'info', title: '객체 이상 감지', message: '객체 이상을 감지하였습니다.' },
+  //   { severity: 'warning', title: '배터리 부족', message: '로봇의 배터리 잔량이 얼마 남지 않았습니다.' },
+  //   { severity: 'error', title: '배터리 방전', message: '로봇의 배터리가 방전되었습니다.' },
+  // ];
 
   // 모달을 여는 핸들러
   const handleModalOpen = () => {
@@ -289,6 +288,7 @@ export default function MiniDrawer({ children }) {
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
           {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
         </Box>
+        {/* <ROSAlarm onNotification={addNotification} /> */}
         <NotificationModal
           open={modalOpen}
           handleClose={handleModalClose}

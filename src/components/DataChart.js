@@ -1,222 +1,97 @@
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import { Line } from 'react-chartjs-2';
-// import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-
-// // Chart.js 컴포넌트 등록
-// ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-
-// // line chart : https://www.chartjs.org/docs/latest/samples/line/line.html#line-chart
-// function DataChart() {
-//   // 차트 데이터 상태 관리
-//   const [chartData, setChartData] = useState({
-//     labels: [],
-//     datasets: [
-//       {
-//         label: '온도 (°C)',
-//         data: [],
-//         borderColor: 'rgb(255, 99, 132)',
-//         backgroundColor: 'rgba(255, 99, 132, 0.5)',
-//       },
-//       {
-//         label: '습도 (%)',
-//         data: [],
-//         borderColor: 'rgb(53, 162, 235)',
-//         backgroundColor: 'rgba(53, 162, 235, 0.5)',
-//       },
-//     ],
-//   });
-
-//   useEffect(() => {
-//     const uid = localStorage.getItem('uid');
-    
-//     // API에서 데이터 가져오기
-//     axios.get('http://localhost:8080/api/yesterdaySummary', {
-//       params: { uid: uid }
-//     })
-//     .then((response) => {
-//       const data = response.data;
-      
-//       // 차트 데이터 구성
-//       const labels = data.map(item => item.timestamp);
-//       const temperatures = data.map(item => item.temperature);
-//       const humidities = data.map(item => item.humidity);
-
-//       setChartData({
-//         labels,
-//         datasets: [
-//           {
-//             label: '온도 (°C)',
-//             data: temperatures,
-//             borderColor: 'rgb(255, 99, 132)',
-//             backgroundColor: 'rgba(255, 99, 132, 0.5)',
-//           },
-//           {
-//             label: '습도 (%)',
-//             data: humidities,
-//             borderColor: 'rgb(53, 162, 235)',
-//             backgroundColor: 'rgba(53, 162, 235, 0.5)',
-//           },
-//         ],
-//       });
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching data:", error);
-//     });
-//   }, []);
-
-//   // 차트 옵션 설정
-//   const options = {
-//     responsive: true,
-//     plugins: {
-//       legend: {
-//         position: 'top',
-//       },
-//       title: {
-//         display: true,
-//         text: '어제의 온습도 데이터',
-//       },
-//     },
-//   };
-
-//   return (
-//     <div>
-//       <Line options={options} data={chartData} />
-//     </div>
-//   );
-// }
-
-// export default DataChart;
-
-
-
-
-
-
-
-
-// //npm install chartjs-plugin-annotation --force필요
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import annotationPlugin from 'chartjs-plugin-annotation';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, annotationPlugin);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function DataChart() {
   const [chartData, setChartData] = useState({
-    labels: [],
+    labels: ['최고', '최저', '평균'],
     datasets: [
       {
         label: '온도 (°C)',
         data: [],
+        backgroundColor: 'rgba(255, 99, 132, 0.5)', // 온도의 색상
         borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        borderWidth: 1,
+        stack: 'temperature',
       },
       {
         label: '습도 (%)',
         data: [],
+        backgroundColor: 'rgba(53, 162, 235, 0.5)', // 습도의 색상
         borderColor: 'rgb(53, 162, 235)',
-        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        borderWidth: 1,
+        stack: 'humidity',
       },
     ],
   });
 
   const [selectedDate, setSelectedDate] = useState(dayjs());
-  const [isTestMode, setIsTestMode] = useState(true);
-  const [averages, setAverages] = useState({ temperature: 0, humidity: 0 });
 
-  const generateTestData = (date) => {
-    const data = [];
-    const startOfDay = dayjs(date).startOf('day');
-    
-    for (let i = 0; i < 24; i++) {
-      const timestamp = startOfDay.add(i, 'hour').format('MM월 DD일 HH시');
-      const temperature = Math.random() * 10 + 20;
-      const humidity = Math.random() * 30 + 40;
-      
-      data.push({
-        timestamp,
-        temperature: temperature.toFixed(1),
-        humidity: humidity.toFixed(1)
-      });
-    }
-    
-    return data;
-  };
+  const [dailySummary, setDailySummary] = useState({
+    avg_temperature: null, avg_humidity: null,
+    max_temperature: null, max_humidity: null,
+    min_temperature: null, min_humidity: null 
+  });
 
   useEffect(() => {
     const uid = localStorage.getItem('uid');
     const formattedDate = selectedDate.format('YYYY-MM-DD');
 
-    if (isTestMode) {
-      const testData = generateTestData(selectedDate);
-      updateChartData(testData);
-    } else {
-      axios.get('http://localhost:8080/api/dailySummary', {
-        params: { uid: uid, date: formattedDate }
-      })
-      .then((response) => {
-        updateChartData(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
+    axios.get('http://localhost:8080/api/dailySummary', {
+      params: { date: formattedDate, uid: uid }
+    })
+    .then((response) => {
+      const data = response.data[0];
+      console.log(data)
+      setDailySummary({
+        avg_temperature: data.avgTemperature.toFixed(1),
+        avg_humidity: data.avgHumidity.toFixed(1),
+        max_temperature: data.maxTemperature.toFixed(1),
+        max_humidity: data.maxHumidity.toFixed(1),
+        min_temperature: data.minTemperature.toFixed(1),
+        min_humidity: data.minHumidity.toFixed(1)
       });
-    }
-  }, [selectedDate, isTestMode]);
 
-  const updateChartData = (data) => {
-    const labels = data.map(item => item.timestamp);
-    const temperatures = data.map(item => parseFloat(item.temperature));
-    const humidities = data.map(item => parseFloat(item.humidity));
-
-    const avgTemperature = temperatures.reduce((a, b) => a + b, 0) / temperatures.length;
-    const avgHumidity = humidities.reduce((a, b) => a + b, 0) / humidities.length;
-
-    setAverages({
-      temperature: avgTemperature.toFixed(1),
-      humidity: avgHumidity.toFixed(1)
+      updateChartData({
+        avg_temperature: data.avgTemperature,
+        avg_humidity: data.avgHumidity,
+        max_temperature: data.maxTemperature,
+        max_humidity: data.maxHumidity,
+        min_temperature: data.minTemperature,
+        min_humidity: data.minHumidity
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
     });
+  }, [selectedDate]);
 
+  const updateChartData = (summary) => {
     setChartData({
-      labels,
+      labels: ['최고', '최저', '평균'],
       datasets: [
         {
           label: '온도 (°C)',
-          data: temperatures,
-          borderColor: 'rgb(255, 99, 132)',
+          data: [summary.max_temperature, summary.min_temperature, summary.avg_temperature],
           backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          borderColor: 'rgb(255, 99, 132)',
+          borderWidth: 1,
+          stack: 'temperature',
         },
         {
           label: '습도 (%)',
-          data: humidities,
-          borderColor: 'rgb(53, 162, 235)',
+          data: [summary.max_humidity, summary.min_humidity, summary.avg_humidity],
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
-        },
-        {
-          label: '평균 온도',
-          data: Array(temperatures.length).fill(avgTemperature),
-          borderColor: 'rgba(255, 99, 132, 0.5)',
-          borderDash: [5, 5],
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: false,
-        },
-        {
-          label: '평균 습도',
-          data: Array(humidities.length).fill(avgHumidity),
-          borderColor: 'rgba(53, 162, 235, 0.5)',
-          borderDash: [5, 5],
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: false,
+          borderColor: 'rgb(53, 162, 235)',
+          borderWidth: 1,
+          stack: 'humidity',
         },
       ],
     });
@@ -232,61 +107,24 @@ function DataChart() {
         display: true,
         text: '선택한 날짜의 온습도 데이터',
       },
-      annotation: {
-        annotations: {
-          temperatureAvgLine: {
-            type: 'line',
-            yMin: averages.temperature,
-            yMax: averages.temperature,
-            borderColor: 'rgb(255, 99, 132)',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            label: {
-              display: true,
-              content: `평균 온도: ${averages.temperature}°C`,
-              position: 'end'
-            }
-          },
-          humidityAvgLine: {
-            type: 'line',
-            yMin: averages.humidity,
-            yMax: averages.humidity,
-            borderColor: 'rgb(53, 162, 235)',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            label: {
-              display: true,
-              content: `평균 습도: ${averages.humidity}%`,
-              position: 'end'
-            }
-          }
-        }
+    },
+    scales: {
+      x: {
+        stacked: true,
       },
-      tooltip: {
-        callbacks: {
-          afterTitle: function(context) {
-            if (context[0].datasetIndex === 2) {
-              return `평균 온도: ${averages.temperature}°C`;
-            } else if (context[0].datasetIndex === 3) {
-              return `평균 습도: ${averages.humidity}%`;
-            }
-          }
-        }
-      }
+      y: {
+        stacked: true,
+      },
     },
   };
 
   const handleDateChange = (newDate) => {
-    const sevenDaysAgo = dayjs().subtract(7, 'day');
+    const sevenDaysAgo = dayjs().subtract(90, 'day');
     if (newDate.isAfter(sevenDaysAgo)) {
       setSelectedDate(newDate);
     } else {
-      alert('최대 7일 전까지의 데이터만 조회할 수 있습니다.');
+      alert('최대 90일 전까지의 데이터만 조회할 수 있습니다.');
     }
-  };
-
-  const toggleTestMode = () => {
-    setIsTestMode(!isTestMode);
   };
 
   return (
@@ -297,13 +135,10 @@ function DataChart() {
           value={selectedDate}
           onChange={handleDateChange}
           maxDate={dayjs()}
-          minDate={dayjs().subtract(7, 'day')}
+          minDate={dayjs().subtract(90, 'day')}
         />
       </LocalizationProvider>
-      <button onClick={toggleTestMode}>
-        {isTestMode ? '실제 데이터 사용' : '테스트 데이터 사용'}
-      </button>
-      <Line options={options} data={chartData} />
+      <Bar options={options} data={chartData} />
     </div>
   );
 }
