@@ -15,6 +15,12 @@ import Box from '@mui/material/Box';
 import { AuthContext } from '../../contexts/AuthContext';
 import ChartModal from '../../components/ChartModal';
 import ROSLIB from "roslib"
+import Battery0BarIcon from '@mui/icons-material/Battery0Bar';
+import BatteryFullIcon from '@mui/icons-material/BatteryFull';
+import Battery50Icon from '@mui/icons-material/Battery50';
+import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+
 
 
 const MainContainer = styled('div')({
@@ -36,7 +42,6 @@ const Header = styled('div')({
   width: '100%',
   marginBottom: '20px',
 });
-
 
 
 const CardContainer = styled('div')(({ theme }) => ({
@@ -80,8 +85,8 @@ const Main = React.memo(() => {
   }, [])
   
   useEffect(() => {
-    console.log("NEW :", sentSensorData)
-    console.log("OLD :", sensorData)
+    // console.log("NEW :", sentSensorData)
+    // console.log("OLD :", sensorData)
 
     sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
     sentSensorData.humidity != sensorData.humidity ? setUpdateFlag(true) : setUpdateFlag(false) 
@@ -130,16 +135,37 @@ const Main = React.memo(() => {
       let lastStatus = null
 
       batteryListener.subscribe((message) => {
-        if (message.data != lastBattery){
-          setRobotBattery(message.data);
-          lastBattery = message.data
+        if (message.data !== lastBattery) {
+          switch(message.data) {
+            case 'Battery_High':
+              setRobotBattery(<BatteryFullIcon />);
+              break;
+            case 'Battery_Medium':
+              setRobotBattery(<Battery50Icon />);
+              break;
+            case 'Battery_Low':
+              setRobotBattery(<Battery0BarIcon />);
+              break;
+            default:
+              setRobotBattery(message.data);
+          }
+          lastBattery = message.data;
         }
       });
 
       statusListener.subscribe((message) => {
         if (message.state != lastStatus){
-          setRobotStatus(message.state)
-          lastStatus = message.state
+          switch(message.state){
+            case 'running':
+              setRobotStatus(<PlayCircleFilledIcon />)
+              break;
+            case 'stanby':
+              setRobotStatus(<RemoveCircleIcon />)
+              break;
+            default:
+              setRobotStatus('')
+            lastStatus = message.state
+          }
         }
       })
     };
@@ -191,12 +217,13 @@ const Main = React.memo(() => {
 
   // 현재의 온습도와 전송받은 온습도가 다른지를 확인
   useEffect(() => {
-    console.log("NEW :", sentSensorData)
-    console.log("OLD :", sensorData)
+    // console.log("NEW :", sentSensorData)
+    // console.log("OLD :", sensorData)
 
     sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
     sentSensorData.humidity != sensorData.humidity ? setUpdateFlag(true) : setUpdateFlag(false) 
   }, [sentSensorData])
+
 
   
   // 확인 후 DB
@@ -244,7 +271,7 @@ const Main = React.memo(() => {
     setIsModalOpen(false);
     setSnackbarOpen(true);
   };
-
+  
   const handleCloseSnackbar = (event, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -281,7 +308,7 @@ const Main = React.memo(() => {
     <MainContainer>
       <Content>
         <Header>
-          {my_context.user.email}의 농장
+          {my_context.user ? my_context.user.email : "아무개"}의 농장
         </Header>
         <CardContainer>
           <Box sx={{ flexGrow: 1 }}>

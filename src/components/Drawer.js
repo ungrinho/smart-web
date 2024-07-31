@@ -27,20 +27,18 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import NotificationModal from './NotificationModal';
-// import ROSAlarm from './ROSAlarm';
+import ROSAlarm from './ROSAlarm';
 
-
-
-// 커스텀 테마 생성
+// Custom theme created
 const customTheme = createTheme({
   palette: {
     primary: {
-      main: '#86d16a', // 메인 색상을 #86d16a로 설정
-      light: '#a8dd94', // 밝은 버전
-      dark: '#5e9249', // 어두운 버전
+      main: '#86d16a', // Main color set to #86d16a
+      light: '#a8dd94', // Light version
+      dark: '#5e9249', // Dark version
     },
     background: {
-      default: '#f0f8ed', // 배경색을 연한 녹색으로 설정
+      default: '#f0f8ed', // Background color set to light green
     },
   },
 });
@@ -73,7 +71,7 @@ export const DrawerHeader = styled('div')(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'flex-end',
   padding: theme.spacing(0, 1),
-  // 앱 바 아래에 컨텐츠가 있도록 하는 데 필요합니다.
+  // Needed for content to be below the app bar.
   ...theme.mixins.toolbar,
 }));
 
@@ -95,7 +93,7 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-// styled를 사용하여 MuiDrawer를 커스터마이징하고, 새로운 StyledDrawer 컴포넌트를 정의합니다.
+// Styled MuiDrawer component defined using styled
 const StyledDrawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     width: drawerWidth,
@@ -113,37 +111,49 @@ const StyledDrawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== '
   }),
 );
 
-
-
-// MiniDrawer 컴포넌트는 애플리케이션의 기본 레이아웃을 담당합니다.
-// export default function
 export default function MiniDrawer({ children }) {
-  const theme = useTheme();  // MUI 테마를 가져옵니다.
-  const [open, setOpen] = React.useState(false);  // Drawer의 열림 상태를 관리하는 상태 변수입니다.
-  const navigate = useNavigate();  // 페이지 네비게이션을 위해 useNavigate 훅을 사용합니다.
-  const [notificationCount, setNotificationCount] = useState(4);
+  const theme = useTheme();
+  const [open, setOpen] = React.useState(false);
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  
 
   const addNotification = (newNotification) => {
-    setNotifications(prev => [...prev, newNotification]);
-    setNotificationCount(prev => prev + 1);
+    setNotifications(prev => [
+      ...prev, 
+      {
+        ...newNotification,
+        id: Date.now(),
+        timestamp: new Date().getTime()
+      }
+    ]);
   };
 
-  // Drawer 열기/닫기 핸들러
-  const handleDrawerOpen = () => setOpen(true);
-  const handleDrawerClose = () => setOpen(false);  
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
 
-  // 로그아웃 함수
+  const removeAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  // Notification count calculated
+  const notificationCount = notifications.length;
+
+  // Drawer open/close handlers
+  const handleDrawerOpen = () => setOpen(true);
+  const handleDrawerClose = () => setOpen(false);
+
+  // Logout function
   const onLogoutClick = async () => {
     try {
-      await signOut(auth);  // Firebase 인증에서 로그아웃합니다.
-      setUser(null);  // 로그아웃 후 사용자 정보를 null로 설정합니다.
-      navigate('/');  // 로그아웃 후 홈으로 이동합니다.
+      await signOut(auth);  // Sign out from Firebase authentication
+      setUser(null);  // Set user to null after logout
+      localStorage.removeItem("uid");  // Remove uid from local storage
+      navigate('/', { replace: true });  // Navigate to home after logout and replace history
     } catch (error) {
-      console.error("로그아웃 중 오류 발생:", error);  // 로그아웃 중 에러가 발생하면 콘솔에 출력합니다.
+      console.error("Error during logout:", error);  // Log error if occurs during logout
     }
   };
 
@@ -151,19 +161,19 @@ export default function MiniDrawer({ children }) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        console.log("현재 로그인 중인 유저의 uid :", currentUser.uid);
-        localStorage.setItem("uid", currentUser.uid);  // 사용자 uid를 로컬 스토리지에 저장합니다.
+        console.log("Current user's uid:", currentUser.uid);
+        localStorage.setItem("uid", currentUser.uid);  // Store user uid in local storage
       } else {
-        console.log("로그인 유저가 없습니다!");
-        // localStorage.setItem("uid", null);  // 사용자가 없으면 uid를 null로 설정합니다.
+        console.log("No logged in user!");
         localStorage.removeItem("uid");
+        navigate('/', { replace: true });  // Navigate to home if no user and replace history
       }
     });
   
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);  // Add navigate to dependency array
 
-  // 메뉴 항목 정의
+  // Menu items defined
   const menuItems = [
     { text: '홈', icon: <HomeIcon />, path: '/main' },
     { text: '객체 확인 페이지', icon: <ControlCameraIcon />, path: '/obj' },
@@ -171,35 +181,14 @@ export default function MiniDrawer({ children }) {
     { text: '고객 문의', icon: <ChatIcon />, path: '/cs' },
   ];
 
-  // // 알림 데이터
-  // const notifications = [
-  //   { severity: 'success', title: '객체 탐지 완료!', message: '로봇이 순찰을 완료하였습니다. 총 n개의 이상이 감지되었습니다.' },
-  //   { severity: 'info', title: '객체 이상 감지', message: '객체 이상을 감지하였습니다.' },
-  //   { severity: 'warning', title: '배터리 부족', message: '로봇의 배터리 잔량이 얼마 남지 않았습니다.' },
-  //   { severity: 'error', title: '배터리 방전', message: '로봇의 배터리가 방전되었습니다.' },
-  // ];
 
-  // 모달을 여는 핸들러
+  // Handler to open modal
   const handleModalOpen = () => {
     setModalOpen(true);
-    setNotificationCount(0); // 모달을 열 때 알림 카운트 리셋
   };
 
-  // 모달을 닫는 핸들러
-  // const handleModalClose = () => {
-  //   setModalOpen(false);
-  // };
+  // Handler to close modal
   const handleModalClose = () => setModalOpen(false);
-  
-  // 알림 버튼 클릭 핸들러 수정
-  const handleNotificationClick = () => {
-    // 모달의 상태를 토글합니다.
-    setModalOpen(prevState => !prevState);
-    // 모달이 열릴 때만 알림 카운트를 리셋합니다.
-    if (!modalOpen) {
-      setNotificationCount(0);
-    }
-  };
 
   return (
     <ThemeProvider theme={customTheme}>
@@ -236,7 +225,6 @@ export default function MiniDrawer({ children }) {
             </IconButton>
           </DrawerHeader>
           <Divider />
-          {/* 메뉴 항목 */}
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
@@ -271,32 +259,19 @@ export default function MiniDrawer({ children }) {
               </button>
             }
           </ListItem>
-          {/* {user && ( // user가 존재할 때만 사용자 정보를 표시합니다.
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body1">Email: {user.email}</Typography>
-            </Box>
-          )} */}
-          {/* // user가 존재할 때만 사용자 정보를 표시합니다.
-          {user && (
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2">
-                {user.email ? `Logged in as: ${user.email}` : 'User logged in'}
-              </Typography>
-            </Box>
-          )} */}
         </StyledDrawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
-          {children}  {/* 자식 컴포넌트를 렌더링합니다. */}
+          {children}
         </Box>
-        {/* <ROSAlarm onNotification={addNotification} /> */}
+        <ROSAlarm onNotification={addNotification} />
         <NotificationModal
           open={modalOpen}
           handleClose={handleModalClose}
           notifications={notifications}
+          removeNotification={removeNotification}
+          removeAllNotifications={removeAllNotifications}
         />
       </Box>
     </ThemeProvider>
   );
 }
-
-
