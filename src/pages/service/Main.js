@@ -20,8 +20,7 @@ import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Battery50Icon from '@mui/icons-material/Battery50';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-
-
+import { Button } from '@mui/material'
 
 const MainContainer = styled('div')({
   display: 'flex',
@@ -43,6 +42,26 @@ const Header = styled('div')({
   marginBottom: '20px',
 });
 
+const StyledCard = styled(Card)({
+  height: '100%',
+  // display: 'flex',
+  // flexDirection: 'column',
+});
+
+const StyledCardContent = styled(CardContent)({
+  flexGrow: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+});
+
+const CardTitle = styled(Typography)({
+  marginBottom: '16px',
+});
+
+const CardInfo = styled(Typography)({
+  marginBottom: '8px',
+});
 
 const CardContainer = styled('div')(({ theme }) => ({
   display: 'grid',
@@ -52,6 +71,21 @@ const CardContainer = styled('div')(({ theme }) => ({
     gridTemplateColumns: '1fr',
   },
 }));
+
+const ToggleButton = styled(Button)(({ isrunning }) => ({ 
+  minWidth: '50%',
+  height: '100%',
+  fontSize: '15px',
+  backgroundColor: isrunning === 'true' ? 'red' : 'green',
+  color: 'white',
+  '&:hover': {
+    backgroundColor: isrunning === 'true' ? '#d32f2f' : '#388e3c',
+  },
+}));
+
+const hoverStyle = {
+  backgroundColor: '#f0f0f0', // 원하는 hover 색상으로 변경
+};
 
 const Main = React.memo(() => {
   const navigate = useNavigate();
@@ -68,6 +102,9 @@ const Main = React.memo(() => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [yesterdayData, setYesterdayData] = useState({ avg_temperature: null, avg_humidity: null });
+  const [ros, setRos] = useState(null);
+  const [startPublisher, setStartPublisher] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
 
   console.log("my_context", my_context.user)
 
@@ -75,10 +112,10 @@ const Main = React.memo(() => {
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("현재 로그인 중인 유저의 uid :", user.uid)
+        // console.log("현재 로그인 중인 유저의 uid :", user.uid)
         localStorage.setItem("uid", user.uid)
       } else {
-        console.log("로그인 유저가 없습니다!")
+        // console.log("로그인 유저가 없습니다!") 
         localStorage.setItem("uid", null)
       }
     });
@@ -94,87 +131,103 @@ const Main = React.memo(() => {
 
   // ROS 토픽 연결
   useEffect(() => {
-    const ros = new ROSLIB.Ros({
-      url : 'ws://192.168.0.13:9090'
-    })
+    const newRos = new ROSLIB.Ros({
+      url: 'ws://192.168.0.13:9090'
+    });
 
-    const ROSConnect = () => {
-      try {
-        ros.on("connection", () => {
-          console.log("Connected to websocket server.");
-          ROSGet(ros);
-        });
-        ros.on("error", (error) => {
-          console.log("Error connecting to websocket server:", error);
-          alert("Error connecting to websocket server.");
-        });
-        ros.on("close", () => {
-          console.log("Connection to websocket server closed.");
-        });
-      } catch (error){
-        console.log("Failed to construct websocket. The URL is invalid:", error);
-        alert("Failed to construct websocket. The URL is invalid.");
-      };
-    }
+    newRos.on("connection", () => {
+      console.log("Connected to websocket server.");
+      setupROSTopics(newRos);
+    });
 
-    // 배터리 및 상태 수신
-    const ROSGet = () => {
-      let batteryListener = new ROSLIB.Topic({
-        ros: ros,
-        name: '/jetbot_mini/battery',
-        messageType: 'std_msgs/String'
-      });
+    newRos.on("error", (error) => {
+      console.log("Error connecting to websocket server:", error);
+    });
 
-      let statusListener = new ROSLIB.Topic({
-        ros: ros,
-        name: '/jetbot_mini/state',
-        messageType: 'jetbotmini_msgs/State'
-      })
+    newRos.on("close", () => {
+      console.log("Connection to websocket server closed.");
+    });
 
-      let lastBattery = null
-      let lastStatus = null
-
-      batteryListener.subscribe((message) => {
-        if (message.data !== lastBattery) {
-          switch(message.data) {
-            case 'Battery_High':
-              setRobotBattery(<BatteryFullIcon />);
-              break;
-            case 'Battery_Medium':
-              setRobotBattery(<Battery50Icon />);
-              break;
-            case 'Battery_Low':
-              setRobotBattery(<Battery0BarIcon />);
-              break;
-            default:
-              setRobotBattery(message.data);
-          }
-          lastBattery = message.data;
-        }
-      });
-
-      statusListener.subscribe((message) => {
-        if (message.state != lastStatus){
-          switch(message.state){
-            case 'running':
-              setRobotStatus(<PlayCircleFilledIcon />)
-              break;
-            case 'stanby':
-              setRobotStatus(<RemoveCircleIcon />)
-              break;
-            default:
-              setRobotStatus('')
-            lastStatus = message.state
-          }
-        }
-      })
-    };
-    ROSConnect();
+    setRos(newRos);
 
     return () => {
-      ros.close();
+      newRos.close();
     };
-  }, []); 
+  }, []);
+
+  const setupROSTopics = (ros) => {
+    let lastBattery = null;
+    let lastStatus = null;
+
+    const batteryListener = new ROSLIB.Topic({
+      ros: ros,
+      name: '/jetbot_mini/battery',
+      messageType: 'std_msgs/String'
+    });
+
+    const statusListener = new ROSLIB.Topic({
+      ros: ros,
+      name: '/jetbot_mini/state',
+      messageType: 'jetbotmini_msgs/State'
+    });
+
+    const newStartPublisher = new ROSLIB.Topic({
+      ros: ros,
+      name: '/jetbot_mini/auto',
+      messageType: 'std_msgs/String'
+    });
+
+    setStartPublisher(newStartPublisher);
+
+    batteryListener.subscribe((message) => {
+      if (message.data !== lastBattery) {
+        switch(message.data) {
+          case 'Battery_High':
+            setRobotBattery(<BatteryFullIcon />);
+            break;
+          case 'Battery_Medium':
+            setRobotBattery(<Battery50Icon />);
+            break;
+          case 'Battery_Low':
+            setRobotBattery(<Battery0BarIcon />);
+            break;
+          default:
+            setRobotBattery('');
+        }
+        lastBattery = message.data;
+      }
+    });
+
+    statusListener.subscribe((message) => {
+      if (message.state !== lastStatus) {
+        switch(message.state) {
+          case 'running':
+            setRobotStatus(<PlayCircleFilledIcon />);
+            break;
+          case 'stanby':
+            setRobotStatus(<RemoveCircleIcon />);
+            break;
+          default:
+            setRobotStatus('');
+        }
+        lastStatus = message.state;
+      }
+    });
+  };
+
+  const toggleRobot = () => {
+    if (startPublisher) {
+      const message = new ROSLIB.Message({
+        data: isRunning ? 'stop' : 'start'
+      });
+      startPublisher.publish(message);
+      console.log(message);
+      console.log(`${isRunning ? 'Stop' : 'Start'} message published`);
+      setIsRunning(!isRunning);
+    } else {
+      console.log('Start publisher not ready');
+    }
+  };
 
   // arduino 실시간 온습도 수신
   useEffect(() => {
@@ -223,8 +276,6 @@ const Main = React.memo(() => {
     sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
     sentSensorData.humidity != sensorData.humidity ? setUpdateFlag(true) : setUpdateFlag(false) 
   }, [sentSensorData])
-
-
   
   // 확인 후 DB
   useEffect(() =>{
@@ -289,12 +340,12 @@ const Main = React.memo(() => {
       }
     })
     .then((retval) => {
-      console.log("success!", retval.data[0].avgHumidity)
+      // console.log("success!", retval.data[0].avgHumidity)
       setYesterdayData({
         avg_temperature: retval.data[0].avgTemperature.toFixed(1),
         avg_humidity: retval.data[0].avgHumidity.toFixed(1)
       })
-      console.log(avg_temperature)
+      // console.log(avg_temperature)
     }).catch((retval) => {
       console.log("Error@@", retval)
     })
@@ -312,64 +363,75 @@ const Main = React.memo(() => {
         </Header>
         <CardContainer>
           <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={4} sm={4} md={4}>
-                <Card>
-                  <CardActionArea>
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="div">
-                        현재 온습도
-                      </Typography>
-                      <br></br>
-                      <Typography variant="body2" color="text.secondary">
-                        온도: {sensorData.temperature}°C
-                      </Typography>
-                      <br></br>
-                      <Typography variant="body2" color="text.secondary">
-                        습도: {sensorData.humidity}%
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-              <Grid item xs={4} sm={4} md={4}>
-                <Card>
-                  <CardActionArea onClick={handleOpenModal}>
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="div">
-                        전날 평균 온습도
-                      </Typography>
-                      <br></br>
-                      <Typography variant="body2" color="text.secondary">
+          <Grid container spacing={2}>
+            <Grid item xs={4} sm={4} md={4}>
+              <StyledCard>
+                <StyledCardContent>
+                  <CardTitle variant="h5" component="div">
+                    현재 온습도
+                  </CardTitle>
+                  <br />
+                  <div>
+                    <CardInfo variant="body2" color="text.secondary">
+                      온도: {sensorData.temperature}°C
+                    </CardInfo>
+                    <br />
+                    <CardInfo variant="body2" color="text.secondary">
+                      습도: {sensorData.humidity}%
+                    </CardInfo>
+                  </div>
+                </StyledCardContent>
+              </StyledCard>
+            </Grid>
+            <Grid item xs={4} sm={4} md={4}>
+              <StyledCard onClick={handleOpenModal} 
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+                          style={{ height: '100%', cursor: 'pointer', hover: '#ccc'}}>
+                {/* <CardActionArea onClick={handleOpenModal} style={{height: '100%'}}> */}
+                  <StyledCardContent>
+                    <CardTitle variant="h5" component="div">
+                      전날 평균 온습도
+                    </CardTitle>
+                    <br />
+                    <div>
+                      <CardInfo variant="body2" color="text.secondary">
                         온도: {yesterdayData.avg_temperature}°C
-                      </Typography>
-                      <br></br>
-                      <Typography variant="body2" color="text.secondary">
+                      </CardInfo>
+                      <br />
+                      <CardInfo variant="body2" color="text.secondary">
                         습도: {yesterdayData.avg_humidity}%
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-              <Grid item xs={4} sm={4} md={4}>
-                <Card>
-                  <CardActionArea>
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="div">
-                        Robot Condition
-                      </Typography>
-                      <br></br>
-                      <Typography variant="body2" color="text.secondary">
-                        상태: { robotStatus }
-                      </Typography>
-                      <br></br>
-                      <Typography variant="body2" color="text.secondary">
-                        배터리: { robotBattery }
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
+                      </CardInfo>
+                    </div>
+                  </StyledCardContent>
+                {/* </CardActionArea> */}
+              </StyledCard>
+            </Grid>
+            <Grid item xs={4} sm={4} md={4}>
+              <StyledCard>
+                <StyledCardContent>
+                  <CardTitle variant="h5" component="div">
+                    Robot Condition
+                  </CardTitle>
+                  <div>
+                    <CardInfo variant="body2" color="text.secondary">
+                      상태: {robotStatus}
+                    </CardInfo>
+                    <br />
+                    <CardInfo variant="body2" color="text.secondary">
+                      배터리: {robotBattery}
+                    </CardInfo>
+                  </div>
+                  <ToggleButton 
+                    onClick={toggleRobot} 
+                    isrunning={isRunning.toString()}
+                    style={{marginTop: '16px'}}
+                  >
+                    {isRunning ? 'Stop' : 'Start'}
+                  </ToggleButton>
+                </StyledCardContent>
+              </StyledCard>
+            </Grid>
               <Grid item xs={12} md={15}>
                 <Card>
                   <CardActionArea component={Link} to="/manage">

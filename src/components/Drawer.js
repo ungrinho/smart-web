@@ -263,7 +263,7 @@ export default function MiniDrawer({ children }) {
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
           {children}
         </Box>
-        <ROSAlarm onNotification={addNotification} />
+        {user && <ROSAlarm onNotification={addNotification} />}
         <NotificationModal
           open={modalOpen}
           handleClose={handleModalClose}

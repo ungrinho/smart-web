@@ -7,26 +7,29 @@ function ROSAlarm({ onNotification }) {
   const [currentStandbyStatus, setCurrentStandbyStatus] = useState(null);
 
   useEffect(() => {
+    // ROS 연결 설정
     const ros = new ROSLIB.Ros({
       url: 'ws://192.168.0.13:9090'
     });
 
-    const ROSConnect = () => {
-      try {
-        ros.on("connection", () => {
-          console.log("Connected to websocket server.");
-          subscribeToTopics(ros);
-        });
-        ros.on("error", (error) => {
-          console.log("Error connecting to websocket server:", error);
-        });
-        ros.on("close", () => {
-          console.log("Connection to websocket server closed.");
-        });
-      } catch (error) {
-        console.log("Failed to construct websocket. The URL is invalid:", error);
-      }
-    };
+    const ROSConnect = () => {};
+
+    // const ROSConnect = () => {
+    //   try {
+    //     ros.on("connection", () => {
+    //       console.log("Connected to websocket server.");
+    //       subscribeToTopics(ros);
+    //     });
+    //     ros.on("error", (error) => {
+    //       console.log("Error connecting to websocket server:", error);
+    //     });
+    //     ros.on("close", () => {
+    //       console.log("Connection to websocket server closed.");
+    //     });
+    //   } catch (error) {
+    //     console.log("Failed to construct websocket. The URL is invalid:", error);
+    //   }
+    // };
 
     const subscribeToTopics = (ros) => {
       // 배터리 상태 토픽 구독
@@ -108,7 +111,7 @@ function ROSAlarm({ onNotification }) {
           onNotification({
             severity: 'success',
             title: '객체 탐지 완료!',
-            message: '로봇이 순찰을 완료하였습니다. 총 n개의 이상이 감지되었습니다.'
+            message: '로봇이 순찰을 완료하였습니다. 익은 토마토의 개수는 총 {}개 입니다.'
           });
         }
       }
@@ -130,6 +133,7 @@ function ROSAlarm({ onNotification }) {
 
     ROSConnect();
 
+    // 컴포넌트 언마운트 시 연결 해제
     return () => {
       if (ros) {
         ros.close();
@@ -137,7 +141,7 @@ function ROSAlarm({ onNotification }) {
     };
   }, [onNotification, currentBatteryStatus, currentDriveStatus, currentStandbyStatus]);
 
-  return null;
+  return null; // 이 컴포넌트는 UI를 렌더링하지 않습니다.
 }
 
 export default ROSAlarm;
