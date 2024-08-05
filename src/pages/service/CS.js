@@ -108,7 +108,7 @@ export const CS = () => {
 
   return (
     <Container component="main" maxWidth="sm">
-      <Boxs sx={{ my: 15, pb: 4 }}>
+      <Boxs sx={{ my: 10, pb: 4 }}>
         <Typography variant="h4" component="h1" align="center" sx={{ mb: 5 }}>
           문의 페이지
         </Typography>

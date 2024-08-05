@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState , createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import './App.css';
@@ -10,14 +10,17 @@ import Object from './pages/service/Object';
 import CS from './pages/service/CS';
 import Manage from './pages/service/Manage';
 
+export const topicButtonContext = createContext();
+
 const AppContent = () => {
   const location = useLocation();
-  
+  const [ topicButton, setTopicButton ] = useState({ isTopicStart : false });
   // SignIn과 SignUp 페이지에서는 Drawer를 렌더링하지 않음
   const shouldRenderDrawer = !['/signin', '/signup', '/'].includes(location.pathname);
 
   return (
     <>
+    <topicButtonContext.Provider value={{topicButton, setTopicButton}}>
       {shouldRenderDrawer ? (
         <Drawer>
           <Routes>
@@ -35,6 +38,7 @@ const AppContent = () => {
           <Route path="/signup" element={<SignUp />} />
         </Routes>
       )}
+      </topicButtonContext.Provider>
     </>
   );
 };

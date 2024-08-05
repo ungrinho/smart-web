@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
 import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 import Box from '@mui/material/Box';
 import { AuthContext } from '../../contexts/AuthContext';
+import { topicButtonContext } from '../../App'
 import ChartModal from '../../components/ChartModal';
 import ROSLIB from "roslib"
 import Battery0BarIcon from '@mui/icons-material/Battery0Bar';
@@ -31,7 +32,7 @@ const MainContainer = styled('div')({
 const Content = styled('div')({
   width: '100%',
   maxWidth: 1200,
-  padding: '100px 20px 20px',
+  padding: '65px 20px 0px',
 });
 
 const Header = styled('div')({
@@ -99,14 +100,16 @@ const Main = React.memo(() => {
   const wsRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const my_context = useContext(AuthContext);
+  const topic_context = useContext(topicButtonContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [yesterdayData, setYesterdayData] = useState({ avg_temperature: null, avg_humidity: null });
   const [ros, setRos] = useState(null);
   const [startPublisher, setStartPublisher] = useState(null);
-  const [isRunning, setIsRunning] = useState(false);
 
   console.log("my_context", my_context.user)
+  console.log("topic_context", topic_context)
+  console.log("topic_context", topic_context.topicButton)
 
   // 로그인 관련
   useEffect(() => {
@@ -136,16 +139,16 @@ const Main = React.memo(() => {
     });
 
     newRos.on("connection", () => {
-      console.log("Connected to websocket server.");
+      console.log('웹소켓 서버에 연결되었습니다.');
       setupROSTopics(newRos);
     });
 
     newRos.on("error", (error) => {
-      console.log("Error connecting to websocket server:", error);
+      console.log('웹소켓 서버 연결 오류: ', error);
     });
 
     newRos.on("close", () => {
-      console.log("Connection to websocket server closed.");
+      console.log('웹소켓 서버 연결이 닫혔습니다.');
     });
 
     setRos(newRos);
@@ -216,14 +219,20 @@ const Main = React.memo(() => {
   };
 
   const toggleRobot = () => {
+    // 여기야
+    // topic_context(() => {
+    //   console.log("동작한다")
+    // })
     if (startPublisher) {
       const message = new ROSLIB.Message({
-        data: isRunning ? 'stop' : 'start'
+        data: topic_context.topicButton ? 'start' : 'stop'
       });
-      startPublisher.publish(message);
+
       console.log(message);
-      console.log(`${isRunning ? 'Stop' : 'Start'} message published`);
-      setIsRunning(!isRunning);
+      console.log(`${topic_context.topicButton ? 'Start' : 'Stop'} message published`);
+
+      topic_context.setTopicButton(!topic_context.topicButton)
+      startPublisher.publish(message);
     } else {
       console.log('Start publisher not ready');
     }
@@ -424,10 +433,10 @@ const Main = React.memo(() => {
                   </div>
                   <ToggleButton 
                     onClick={toggleRobot} 
-                    isrunning={isRunning.toString()}
+                    isrunning={(!topic_context.topicButton).toString()}
                     style={{marginTop: '16px'}}
                   >
-                    {isRunning ? 'Stop' : 'Start'}
+                    {!topic_context.topicButton ? 'Stop' : 'Start'}
                   </ToggleButton>
                 </StyledCardContent>
               </StyledCard>

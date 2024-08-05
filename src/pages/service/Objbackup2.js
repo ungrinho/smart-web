@@ -64,20 +64,29 @@ const ClickTableCell = styled(TableCell)({
   },
 });
 
-// Row 컴포넌트: 각 트리에 대한 데이터를 표시하는 확장 가능한 행
 function Row(props) {
-    const { row, onImageClick } = props;
+    const { row, onImageClick, storage } = props;
     const [open, setOpen] = React.useState(false);
     const [selectedCategory, setSelectedCategory] = React.useState(null);
+    const [selectedImage, setSelectedImage] = React.useState(null);
 
-    // 카테고리 클릭 시 해당 카테고리의 이미지 목록을 토글합니다.
     const handleCategoryClick = (category) => {
         setSelectedCategory(category === selectedCategory ? null : category);
     };
 
+    const handleImageClick = async (fileName) => {
+        try {
+            const url = await getDownloadURL(ref(storage, fileName));
+            setSelectedImage(url);
+            onImageClick(url);
+        } catch (error) {
+            console.error('Error getting download URL:', error);
+            setSelectedImage(null);
+        }
+    };
+
     return (
         <React.Fragment>
-            {/* 메인 행: 트리 번호와 총 개수를 표시 */}
             <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
                 <TableCell>
                     <IconButton
@@ -93,7 +102,6 @@ function Row(props) {
                 </TableCell>
                 <TableCell align="right">{row.total}</TableCell>
             </TableRow>
-            {/* 확장 행: 카테고리별 상세 정보를 표시 */}
             <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
@@ -109,7 +117,6 @@ function Row(props) {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {/* 각 카테고리별 정보를 표시 */}
                                     {Object.entries(row.categories).map(([category, count]) => (
                                         <React.Fragment key={category}>
                                             <TableRow onClick={() => handleCategoryClick(category)}>
@@ -118,13 +125,12 @@ function Row(props) {
                                                 </ClickTableCell>
                                                 <TableCell align="right">{count}</TableCell>
                                             </TableRow>
-                                            {/* 선택된 카테고리의 이미지 목록을 표시 */}
                                             {selectedCategory === category && (
                                                 <TableRow>
                                                     <TableCell colSpan={2}>
                                                         <List>
                                                             {row.images[category.toLowerCase()].map((image, index) => (
-                                                                <ListItem key={index} button onClick={() => onImageClick(image.fileName)}>
+                                                                <ListItem key={index} button onClick={() => handleImageClick(image.fileName)}>
                                                                     <ListItemText primary={image.fileName} />
                                                                 </ListItem>
                                                             ))}
@@ -136,6 +142,15 @@ function Row(props) {
                                     ))}
                                 </TableBody>
                             </Table>
+                            {selectedImage && (
+                                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                                    <img 
+                                        src={selectedImage}
+                                        alt="검출된 토마토 사진"
+                                        style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
+                                    />
+                                </Box>
+                            )}
                         </Box>
                     </Collapse>
                 </TableCell>
@@ -144,81 +159,83 @@ function Row(props) {
     );
 }
 
-// Object 컴포넌트: 메인 페이지 구성
 function Object() {
-    // 상태 변수들을 정의합니다.
     const [selectedImage, setSelectedImage] = useState('');
     const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
     const [imageMetadata, setImageMetadata] = useState([]);
     const storage = getStorage();
 
+    // 테스트 데이터
+    const testData = [
+        { fileName: '1-ripe-tomato1.jpg', date: '2023-06-01' },
+        { fileName: '1-unripe-tomato1.jpg', date: '2023-06-01' },
+        { fileName: '1-green-tomato1.jpg', date: '2023-06-01' },
+        { fileName: '2-ripe-tomato2.jpg', date: '2023-06-01' },
+        { fileName: '2-unripe-tomato2.jpg', date: '2023-06-01' },
+        { fileName: '3-green-tomato3.jpg', date: '2023-06-01' },
+        { fileName: '1-ripe-tomato4.jpg', date: '2023-06-02' },
+        { fileName: '2-unripe-tomato5.jpg', date: '2023-06-02' },
+        { fileName: '3-green-tomato6.jpg', date: '2023-06-02' },
+    ];
+
+    // 테스트용 이미지 URL 생성 함수
+    const getTestImageUrl = (fileName) => {
+        if (fileName.includes('ripe')) {
+            return '/ripe-tomato.jpg';
+        } else if (fileName.includes('unripe')) {
+            return '/unripe-tomato.jpg';
+        } else if (fileName.includes('green')) {
+            return '/green-tomato.jpg';
+        } else {
+            return '/camera.png';
+        }
+    };
+
     useEffect(() => {
-        const uid = localStorage.getItem('uid');
-        console.log('date:', selectedDate, 'uid:', uid);
-        const fetchData = async () => {
-            try {
-                // 서버에서 이미지 메타데이터를 가져옵니다.
-                const response = await axios.get('http://localhost:8080/api/images/metadata', {
-                    params: {
-                        date: selectedDate,
-                        uid: uid
-                    }
-                });
-                console.log('API Response:', response.data);
-                if (Array.isArray(response.data)) {
-                    setImageMetadata(response.data);
-                } else {
-                    console.error('Expected array, got:', typeof response.data);
-                    setImageMetadata([]);
-                }
-            } catch (error) {
-                console.error('Error fetching image metadata:', error);
-                setImageMetadata([]);
-            }
-        };
-        fetchData();
+        console.log('date:', selectedDate);
+        const filteredData = testData.filter(item => item.date === selectedDate);
+        setImageMetadata(filteredData);
+        console.log('Filtered Data:', filteredData);
     }, [selectedDate]);
 
-
-    const handleImageClick = async (fileName) => {
-      try {
-          const url = await getDownloadURL(ref(storage, fileName));
-          setSelectedImage(url);
-      } catch (error) {
-          console.error('Error getting download URL:', error);
-      }
+    const handleImageClick = (fileName) => {
+        const imageUrl = getTestImageUrl(fileName);
+        setSelectedImage(imageUrl);
+        console.log('Selected image:', fileName, 'URL:', imageUrl);
     };
 
     const handleDateChange = (date) => {
         setSelectedDate(dayjs(date).format('YYYY-MM-DD'));
     };
 
-    // 이미지 메타데이터를 트리 번호와 카테고리별로 그룹화합니다.
-    const groupedMetadata = imageMetadata.reduce((acc, meta) => {
-      const [treeNumber, category] = meta.fileName.split('-');
-      if (!acc[treeNumber]) {
-          acc[treeNumber] = { ripe: [], unripe: [], green: [] };
-      }
-      if (acc[treeNumber][category.toLowerCase()]) {
-          acc[treeNumber][category.toLowerCase()].push(meta);
-      } else {
-          console.error(`Unknown category: ${category.toLowerCase()}`);
-      }
-      return acc;
-    }, {});
+    // imageMetadata가 배열인지 확인
+    const groupedMetadata = Array.isArray(imageMetadata) ? imageMetadata.reduce((acc, meta) => {
+        const [treeNumber, category] = meta.fileName.split('-');
+        if (!acc[treeNumber]) {
+            acc[treeNumber] = { ripe: [], unripe: [], green: [] };
+        }
+        acc[treeNumber][category].push(meta);
+        return acc;
+    }, {}) : {};
 
-    // 그룹화된 메타데이터를 기반으로 행 데이터를 생성합니다.
-    const rows = Object.entries(groupedMetadata).map(([treeNumber, categories]) => ({
-      date: selectedDate,
-      treeNumber: `Tree ${treeNumber}`,
-      total: categories.ripe.length + categories.unripe.length + categories.green.length,
-      categories: {
-          'Ripe': categories.ripe.length,
-          'Unripe': categories.unripe.length,
-          'Green': categories.green.length
-      },
-      images: categories
-    }));
+    const rows = (() => {
+        const result = [];
+        for (const treeNumber in groupedMetadata) {
+            const categories = groupedMetadata[treeNumber];
+            result.push({
+                date: selectedDate,
+                treeNumber: `Tree ${treeNumber}`,
+                total: categories.ripe.length + categories.unripe.length + categories.green.length,
+                categories: {
+                    'Ripe': categories.ripe.length,
+                    'Unripe': categories.unripe.length,
+                    'Green': categories.green.length
+                },
+                images: categories
+            });
+        }
+        return result;
+    })();
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -226,7 +243,6 @@ function Object() {
     return (
         <MainContainer>
             <CardContainer>
-                {/* 실시간 영상 스트리밍을 표시하는 카드 */}
                 <Card style={{ width: '100%', height: isSmallScreen ? 'auto' : '98%', textAlign: 'center' }}>
                     <img 
                         src='http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw'
@@ -235,7 +251,6 @@ function Object() {
                         style={{ width: '100%', height: isSmallScreen ? 'auto' : '100%', objectFit: 'cover' }}
                     />
                 </Card>
-                {/* 선택된 이미지를 표시하는 카드 */}
                 <Card style={{ width: '100%', height: isSmallScreen ? 'auto' : '98%', textAlign: 'center'}}>
                     <img 
                         src={selectedImage || '/camera.png'}
@@ -250,14 +265,12 @@ function Object() {
                 flexDirection: isSmallScreen ? 'column' : 'row',
                 gap: theme.spacing(2)
             }}>
-                {/* 날짜 선택 캘린더 */}
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DateCalendar 
                         onChange={handleDateChange} 
                         style={{ width: isSmallScreen ? '100%' : '50%'}}
                     />
                 </LocalizationProvider>
-                {/* 데이터 테이블 */}
                 <TableContainer component={Paper} style={{ height: isSmallScreen ? 'auto' : '100%', width: isSmallScreen ? '100%' : '50%' }}>
                     <Table aria-label="collapsible table">
                         <TableHead>
@@ -268,9 +281,8 @@ function Object() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {/* 각 트리에 대한 Row 컴포넌트를 렌더링 */}
                             {rows.map((row) => (
-                                <Row key={row.treeNumber} row={row} onImageClick={handleImageClick} />
+                                <Row key={row.treeNumber} row={row} onImageClick={handleImageClick} storage={storage} />
                             ))}
                         </TableBody>
                     </Table>

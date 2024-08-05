@@ -78,6 +78,12 @@ function Manage(){
             serviceType: '/jetbotmini_msgs/Motor'
         });
 
+        const controlTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: './control',
+            messageType: 'std_msgs/String'
+        });
+
         setRos(ros);
         setMotorService(motorServiceInstance);
 
@@ -149,7 +155,10 @@ function Manage(){
                 aria-label="Platform"
                 >
                 <ToggleButton value="auto" style={{ width: '200px'}}>Auto</ToggleButton>
-                <ToggleButton value="control" style={{ width: '200px'}}>Hands-on</ToggleButton>
+                <ToggleButton value="control" style={{ width: '200px', marginRight: 'auto'}}>Hands-on</ToggleButton>
+                {alignment === 'control' && (
+                    <Button style={{ border: '1px solid #ccc', minWidth: '100px', backgroundColor: '#EBF5E4', color: 'black'}}>운행종료</Button>
+                )}
             </ToggleButtonGroup>
             <br />
             <CardContainer>
