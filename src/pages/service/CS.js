@@ -18,6 +18,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Divider,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { styled } from '@mui/material/styles';
@@ -33,6 +34,37 @@ const Boxs = styled(Box)`
   padding-bottom: 10px !important;
 
 `;
+
+const StyledContainer = styled(Container)(({ theme }) => ({
+  marginTop: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+}));
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  borderRadius: '2px',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: theme.shadows[3],
+}));
+
+const StyledAccordion = styled(Accordion)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  '&:before': {
+    display: 'none',
+  },
+}));
+
+const StyledDivider = styled(Divider)(({ theme }) => ({
+  margin: theme.spacing(2, 0),
+}));
+
+const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
+  alignItems: 'flex-start',
+  '& .MuiFormControlLabel-label': {
+    marginTop: 9, // 체크박스와 텍스트를 수직 정렬하기 위해 조정
+  },
+}));
 
 export const CS = () => {
   const form = useRef();
@@ -113,115 +145,131 @@ export const CS = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Boxs sx={{ my: 10, pb: 4 }}>
-        <Typography variant="h4" component="h1" align="center" sx={{ mb: 5 }}>
-          문의 페이지
-        </Typography>
-        <FormControl component="fieldset" variant="standard" fullWidth>
-          <form ref={form} onSubmit={sendEmail}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="제목"
-                  name="title"
-                  variant="outlined"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  error={titleError !== ''}
-                />
-                <FormHelperTexts>{titleError}</FormHelperTexts>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="문의 내용"
-                  name="message"
-                  multiline
-                  rows={4}
-                  variant="outlined"
-                  required
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  error={messageError !== ''}
-                />
-                <FormHelperTexts>{messageError}</FormHelperTexts>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="회신받을 이메일"
-                  name="reply_mail"
-                  type="email"
-                  variant="outlined"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  error={emailError !== ''}
-                />
-                <FormHelperTexts>{emailError}</FormHelperTexts>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox 
-                      value="allowExtraEmails" 
-                      color="primary" 
-                      checked={checked} 
-                      onChange={(e) => setChecked(e.target.checked)} 
-                    />
-                  }
-                  label={
-                    <span style={{ fontSize: '12px' }}>
-                      개인정보 수집 동의(필수)<br />
-                      수집하는 개인정보 항목: 이메일 주소<br />
-                      작성해 주시는 개인정보는 문의 접수 및 고객 불만 해결을 위해 3년간 보관됩니다.<br />
-                      이용자는 본 동의를 거부할 수 있으나, 미동의 시 문의 접수가 불가능합니다.
-                    </span>
-                  }
-                />
-                <FormHelperTexts>{checkedError}</FormHelperTexts>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                >
-                  문의하기
-                </Button>
-              </Grid>
-            </Grid>
-          </form>
-        </FormControl>
-      </Boxs>
+    <StyledContainer maxWidth="lg">
+      <Typography variant="h4" component="h1" align="center" sx={{ mt: 10, mb: 4, fontWeight: 'bold' }}>
+        고객 지원 센터
+      </Typography>
+      <Grid container spacing={4}>
+        {/* 자주 묻는 질문 섹션 */}
+        <Grid item xs={12} md={5}>
+          <StyledCard>
+            <CardContent>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mt: 1, mb: 3 }}>자주 묻는 질문</Typography>
+              <StyledAccordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Q: 서비스 이용 방법은 어떻게 되나요?</Typography>
+                </AccordionSummary>
+                <StyledDivider />
+                <AccordionDetails>
+                  <Typography>
+                    A: 서비스 이용 방법에 대한 상세한 설명~~~~
+                  </Typography>
+                </AccordionDetails>
+              </StyledAccordion>
+              {/* 추가 FAQ 항목들 */}
+            </CardContent>
+          </StyledCard>
+        </Grid>
 
-      
-      <Box mt={4}>
-        <Typography variant="h5" gutterBottom>자주 묻는 질문</Typography>
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>Q: 서비스 이용 방법은 어떻게 되나요?</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography>
-              A: 서비스 이용 방법에 대한 상세한 설명~~~~
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-        {/* 추가 FAQ 항목들 */}
-      </Box>
-
+        {/* 문의 폼 섹션 */}
+        <Grid item xs={12} md={7}>
+          <StyledCard>
+            <CardContent>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mt: 1, mb: 3 }}>문의하기</Typography>
+              <FormControl component="fieldset" variant="standard" fullWidth>
+                <form ref={form} onSubmit={sendEmail}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="제목"
+                        name="title"
+                        variant="outlined"
+                        required
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        error={titleError !== ''}
+                      />
+                      <FormHelperTexts>{titleError}</FormHelperTexts>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="문의 내용"
+                        name="message"
+                        multiline
+                        rows={4}
+                        variant="outlined"
+                        required
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        error={messageError !== ''}
+                      />
+                      <FormHelperTexts>{messageError}</FormHelperTexts>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="회신받을 이메일"
+                        name="reply_mail"
+                        type="email"
+                        variant="outlined"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        error={emailError !== ''}
+                      />
+                      <FormHelperTexts>{emailError}</FormHelperTexts>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <StyledFormControlLabel
+                        control={
+                          <Checkbox 
+                            value="allowExtraEmails" 
+                            color="primary" 
+                            checked={checked} 
+                            onChange={(e) => setChecked(e.target.checked)} 
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography variant="body2" component="span" sx={{ fontWeight: 'bold' }}>
+                              개인정보 수집 동의 (필수)
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              수집하는 개인정보 항목 : 이메일 주소<br />
+                              작성해 주시는 개인정보는 문의 접수 및 고객 불만 해결을 위해 3년간 보관됩니다.<br />
+                              이용자는 본 동의를 거부할 수 있으나, 미동의 시 문의 접수가 불가능합니다.
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                      <FormHelperTexts>{checkedError}</FormHelperTexts>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                      >
+                        문의하기
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </form>
+              </FormControl>
+            </CardContent>
+          </StyledCard>
+        </Grid>
+      </Grid>
 
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </StyledContainer>
   );
 }
 

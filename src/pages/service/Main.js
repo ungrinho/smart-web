@@ -362,13 +362,13 @@ const Main = React.memo(() => {
                     <CardTitle variant="h5">현재 온습도</CardTitle>
                     <Box display="flex" justifyContent="space-around" alignItems="center">
                       <Box textAlign="center">
-                        <Typography variant="h4" color="primary">{sensorData.temperature}°C</Typography>
+                      <Typography variant="h4" color="#e91e63">{sensorData.temperature}°C</Typography>
                         <Typography variant="subtitle1">온도</Typography>
                       </Box>
                       <Box textAlign="center">
-                        <Typography variant="h4" color="secondary">{sensorData.humidity}%</Typography>
+                        <Typography variant="h4" color="#3d5afe">{sensorData.humidity}%</Typography>
                         <Typography variant="subtitle1">습도</Typography>
-                      </Box>
+                      </Box> 
                     </Box>
                   </StyledCardContent>
                 </StyledCard>
@@ -385,7 +385,7 @@ const Main = React.memo(() => {
                         <YAxis yAxisId="right" orientation="right" />
                         <Tooltip />
                         <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
-                        <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#82ca9d" name="습도" />
+                        <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#3d5afe" name="습도" />
                       </LineChart>
                     </ResponsiveContainer>
                   </StyledCardContent>
@@ -419,7 +419,7 @@ const Main = React.memo(() => {
                 <StyledCard hoverable> 
                   <CardActionArea component={Link} to="/manage" sx={{ height: '100%' }}>
                     <CardContent>
-                      <Typography gutterBottom variant="h5" component="div">
+                      <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
                         관리 페이지
                       </Typography>
                       <Typography variant="body2" color="text.secondary">

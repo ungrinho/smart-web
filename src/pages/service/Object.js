@@ -44,6 +44,7 @@ const MainContainer = styled('div')(({ theme }) => ({
   padding: '100px 20px 20px',
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(1),
+    paddingTop: '60px', // 모바일에서 더 작은 패딩
   },
 }));
 

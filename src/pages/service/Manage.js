@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tabs, Tab, Grid, Button } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Tabs, Tab, Button, useMediaQuery } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
 import ROSLIB from 'roslib';
 
 const MainContainer = styled('div')({
@@ -16,9 +16,9 @@ const CardContainer = styled('div')({
 
 const ControlPanel = styled('div')({
     position: 'absolute',
-    top: '80%',
-    left: '20px',
-    transform: 'translateY(-50%)',
+    bottom: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
     gridTemplateRows: 'repeat(3, 1fr)',
@@ -28,19 +28,77 @@ const ControlPanel = styled('div')({
     zIndex: 1,
 });
 
-const ControlButton = styled(Button)({
+const ControlButton = styled(Button)(({ theme }) => ({
     minWidth: '100%',
     height: '100%',
     fontSize: '15px',
-    opacity: '0.5'
-});
+    opacity: '0.7',
+    padding: 0,
+    '&:hover': {
+        opacity: 1,
+    },
+    [theme.breakpoints.down('sm')]: {
+        fontSize: '12px',
+    },
+}));
+
+// 커스텀 Tabs 컴포넌트
+const StyledTabs = styled(Tabs)(({ theme }) => ({
+  '& .MuiTabs-indicator': {
+    backgroundColor: theme.palette.primary.main,
+    height: 3,
+  },
+}));
+
+// 커스텀 Tab 컴포넌트
+const StyledTab = styled(Tab)(({ theme }) => ({
+  textTransform: 'none',
+  minWidth: 200,
+  fontWeight: theme.typography.fontWeightRegular,
+  color: theme.palette.text.primary,
+  '&:hover': {
+    color: theme.palette.primary.main,
+    opacity: 0.8,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+  },
+  '&.Mui-selected': {
+    color: theme.palette.primary.main,
+    fontWeight: theme.typography.fontWeightMedium,
+  },
+  borderRight: `1px solid ${theme.palette.divider}`,
+  borderLeft: `1px solid ${theme.palette.divider}`
+}));
+
+// 커스텀 Button 컴포넌트
+const StyledButton = styled(Button)(({ theme }) => ({
+  minWidth: 100,
+  backgroundColor: theme.palette.error.main,
+  color: theme.palette.common.white,
+  '&:hover': {
+    backgroundColor: theme.palette.error.dark,
+  },
+  marginLeft: theme.spacing(2),
+}));
+
+const ImageContainer = styled('div')(({ theme }) => ({
+  width: '100%',
+  height: '600px',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  [theme.breakpoints.down('sm')]: {
+    height: '400px',
+  },
+}));
 
 function Manage(){
-    const [alignment, setAlignment] = React.useState('auto');
-    const [currentImage, setCurrentImage] = React.useState('http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw');
-    const [controlPanel, setControlPanel] = React.useState(false);
+    const [alignment, setAlignment] = useState('auto');
+    const [currentImage, setCurrentImage] = useState('http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw');
+    const [controlPanel, setControlPanel] = useState(false);
     const [ros, setRos] = useState(null);
     const [motorService, setMotorService] = useState(null);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     useEffect(() => {
         setCurrentImage(
@@ -144,34 +202,50 @@ function Manage(){
 
     return(
         <MainContainer>
-            <Tabs value={alignment} onChange={handleChange} aria-label="Platform">
-                <Tab value="auto" label="Auto" style={{ width: '200px'}} />
-                <Tab value="control" label="Hands-on" style={{ width: '200px', marginRight: 'auto'}} />
+            <StyledTabs 
+                value={alignment} 
+                onChange={handleChange} 
+                aria-label="Platform"
+            >
+                <StyledTab value="auto" label="Auto" style={{ width: '200px', fontWeight: 'bold'}} />
+                <StyledTab value="control" label="Hands-on" style={{ width: '200px', marginRight: 'auto', fontWeight: 'bold'}} />
                 {alignment === 'control' && (
-                    <Button style={{ border: '1px solid #ccc', minWidth: '100px', backgroundColor: '#EBF5E4', color: 'black'}}>운행종료</Button>
+                    <StyledButton>운행종료</StyledButton>
                 )}
-            </Tabs>
+            </StyledTabs>
             <br />
             <CardContainer>
-                <Card style={{ width: '100%', height: '600px', textAlign:'center'}}>
-                    <img src={currentImage}
-                        alt='영상'
-                        onError={(e) => e.target.src= "/video.png"}
-                        style={{ width: '100%', height: '100%' }}/>
-                </Card>
-                {alignment === 'control' && (
-                    <ControlPanel>
-                        <div></div>
-                        <ControlButton onClick={() => handleControl('forward')} variant="contained">▲</ControlButton>
-                        <div></div>
-                        <ControlButton onClick={() => handleControl('left')} variant="contained">◀</ControlButton>
-                        <ControlButton onClick={() => handleControl('stop')} variant="contained">STOP</ControlButton>
-                        <ControlButton onClick={() => handleControl('right')} variant="contained">▶</ControlButton>
-                        <div></div>
-                        <ControlButton onClick={() => handleControl('backward')} variant="contained">▼</ControlButton>
-                        <div></div>
-                    </ControlPanel>
-                )}
+                <ImageContainer 
+                    style={{
+                        backgroundImage: `url(${currentImage})`,
+                    }}
+                >
+                    {alignment === 'control' && (
+                        <ControlPanel>
+                            <div></div>
+                            <ControlButton onClick={() => handleControl('forward')} variant="contained" color="primary">▲</ControlButton>
+                            <div></div>
+                            <ControlButton onClick={() => handleControl('left')} variant="contained" color="primary">◀</ControlButton>
+                            <ControlButton 
+                                onClick={() => handleControl('stop')} 
+                                variant="contained" 
+                                style={{
+                                    backgroundColor: theme.palette.error.main,
+                                    color: theme.palette.common.white,
+                                    '&:hover': {
+                                        backgroundColor: theme.palette.error.dark,
+                                    },
+                                }}
+                            >
+                                STOP
+                            </ControlButton>
+                            <ControlButton onClick={() => handleControl('right')} variant="contained" color="primary">▶</ControlButton>
+                            <div></div>
+                            <ControlButton onClick={() => handleControl('backward')} variant="contained" color="primary">▼</ControlButton>
+                            <div></div>
+                        </ControlPanel>
+                    )}
+                </ImageContainer>
             </CardContainer>
         </MainContainer>
     )
