@@ -3,15 +3,8 @@ import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-// import YesterdayData from '../../components/YesterdayData';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import Typography from '@mui/material/Typography';
-import { CardActionArea } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import Grid from '@mui/material/Unstable_Grid2';
-import Box from '@mui/material/Box';
 import { AuthContext } from '../../contexts/AuthContext';
 import { topicButtonContext } from '../../App'
 import ChartModal from '../../components/ChartModal';
@@ -21,7 +14,7 @@ import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Battery50Icon from '@mui/icons-material/Battery50';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import { Button } from '@mui/material'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const MainContainer = styled('div')({
   display: 'flex',
@@ -32,7 +25,7 @@ const MainContainer = styled('div')({
 const Content = styled('div')({
   width: '100%',
   maxWidth: 1200,
-  padding: '65px 20px 0px',
+  padding: '55px 20px 0px',
 });
 
 const Header = styled('div')({
@@ -43,11 +36,16 @@ const Header = styled('div')({
   marginBottom: '20px',
 });
 
-const StyledCard = styled(Card)({
+const StyledCard = styled(Card)(({ theme, hoverable }) => ({
   height: '100%',
-  // display: 'flex',
-  // flexDirection: 'column',
-});
+  display: 'flex',
+  flexDirection: 'column',
+  transition: hoverable ? 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out' : 'none',
+  '&:hover': hoverable ? {
+    transform: 'translateY(-5px)',
+    boxShadow: theme.shadows[10],
+  } : {},
+}));
 
 const StyledCardContent = styled(CardContent)({
   flexGrow: 1,
@@ -56,9 +54,10 @@ const StyledCardContent = styled(CardContent)({
   justifyContent: 'space-between',
 });
 
-const CardTitle = styled(Typography)({
-  marginBottom: '16px',
-});
+const CardTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 'bold',
+  marginBottom: theme.spacing(2),
+}));
 
 const CardInfo = styled(Typography)({
   marginBottom: '8px',
@@ -73,7 +72,7 @@ const CardContainer = styled('div')(({ theme }) => ({
   },
 }));
 
-const ToggleButton = styled(Button)(({ isrunning }) => ({ 
+const ToggleButton = styled('button')(({ isrunning }) => ({ 
   minWidth: '50%',
   height: '100%',
   fontSize: '15px',
@@ -85,7 +84,7 @@ const ToggleButton = styled(Button)(({ isrunning }) => ({
 }));
 
 const hoverStyle = {
-  backgroundColor: '#f0f0f0', // 원하는 hover 색상으로 변경
+  backgroundColor: '#f0f0f0',
 };
 
 const Main = React.memo(() => {
@@ -106,6 +105,7 @@ const Main = React.memo(() => {
   const [yesterdayData, setYesterdayData] = useState({ avg_temperature: null, avg_humidity: null });
   const [ros, setRos] = useState(null);
   const [startPublisher, setStartPublisher] = useState(null);
+  const [yesterdayHourlyData, setYesterdayHourlyData] = useState([]);
 
   console.log("my_context", my_context.user)
   console.log("topic_context", topic_context)
@@ -115,19 +115,14 @@ const Main = React.memo(() => {
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // console.log("현재 로그인 중인 유저의 uid :", user.uid)
         localStorage.setItem("uid", user.uid)
       } else {
-        // console.log("로그인 유저가 없습니다!") 
         localStorage.setItem("uid", null)
       }
     });
   }, [])
   
   useEffect(() => {
-    // console.log("NEW :", sentSensorData)
-    // console.log("OLD :", sensorData)
-
     sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
     sentSensorData.humidity != sensorData.humidity ? setUpdateFlag(true) : setUpdateFlag(false) 
   }, [sentSensorData])
@@ -162,16 +157,10 @@ const Main = React.memo(() => {
     let lastBattery = null;
     let lastStatus = null;
 
-    const batteryListener = new ROSLIB.Topic({
+    const statesListener = new ROSLIB.Topic({
       ros: ros,
-      name: '/jetbot_mini/battery',
+      name: '/jetbot_mini/states',
       messageType: 'std_msgs/String'
-    });
-
-    const statusListener = new ROSLIB.Topic({
-      ros: ros,
-      name: '/jetbot_mini/state',
-      messageType: 'jetbotmini_msgs/State'
     });
 
     const newStartPublisher = new ROSLIB.Topic({
@@ -182,47 +171,35 @@ const Main = React.memo(() => {
 
     setStartPublisher(newStartPublisher);
 
-    batteryListener.subscribe((message) => {
-      if (message.data !== lastBattery) {
-        switch(message.data) {
-          case 'Battery_High':
-            setRobotBattery(<BatteryFullIcon />);
-            break;
-          case 'Battery_Medium':
-            setRobotBattery(<Battery50Icon />);
-            break;
-          case 'Battery_Low':
-            setRobotBattery(<Battery0BarIcon />);
-            break;
-          default:
-            setRobotBattery('');
-        }
-        lastBattery = message.data;
-      }
-    });
+    statesListener.subscribe((message) => {
+      console.log("이것이 메시지 :", message.data)
 
-    statusListener.subscribe((message) => {
-      if (message.state !== lastStatus) {
-        switch(message.state) {
-          case 'running':
-            setRobotStatus(<PlayCircleFilledIcon />);
-            break;
-          case 'stanby':
-            setRobotStatus(<RemoveCircleIcon />);
-            break;
-          default:
-            setRobotStatus('');
-        }
-        lastStatus = message.state;
+      const topics = message.data.split(",")
+      if (topics[0] !== lastBattery) {
+
       }
+      switch(topics[0]){
+        case 'Battery_High' :
+          setRobotBattery(<BatteryFullIcon/>)
+          break;
+        
+        case 'Battery_Medium' :
+          setRobotBattery(<Battery50Icon/>)
+          break;
+
+        case 'Battery_Low' :
+          setRobotBattery(<Battery0BarIcon/>)
+          break;
+        default:
+          setRobotBattery('');
+      }
+      lastBattery = topics[0];
+
+      setRobotStatus(topics[1])
     });
-  };
+  }
 
   const toggleRobot = () => {
-    // 여기야
-    // topic_context(() => {
-    //   console.log("동작한다")
-    // })
     if (startPublisher) {
       const message = new ROSLIB.Message({
         data: topic_context.topicButton ? 'start' : 'stop'
@@ -279,26 +256,12 @@ const Main = React.memo(() => {
 
   // 현재의 온습도와 전송받은 온습도가 다른지를 확인
   useEffect(() => {
-    // console.log("NEW :", sentSensorData)
-    // console.log("OLD :", sensorData)
-
     sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
     sentSensorData.humidity != sensorData.humidity ? setUpdateFlag(true) : setUpdateFlag(false) 
   }, [sentSensorData])
   
   // 확인 후 DB
   useEffect(() =>{
-
-    // console.log("usememo called")
-    const { temperature, humidity } = sensorData
-    // if (temperature != sensorData.temperature || humidity != sensorData.humidity){
-    // axios.post('http://localhost:8080/api/saveData', {
-    //   temperature: sensorData.temperature,
-    //   humidity: sensorData.humidity
-    // })
-
-    //setSensorData
-
     if(haveToUpdate){
       setSensorData({
         ...sentSensorData
@@ -317,7 +280,6 @@ const Main = React.memo(() => {
       console.log("Error!", retVal)
     })
     
-    //setSensorData
     setUpdateFlag(false)
   }, [sensorData])
 
@@ -349,15 +311,36 @@ const Main = React.memo(() => {
       }
     })
     .then((retval) => {
-      // console.log("success!", retval.data[0].avgHumidity)
       setYesterdayData({
         avg_temperature: retval.data[0].avgTemperature.toFixed(1),
         avg_humidity: retval.data[0].avgHumidity.toFixed(1)
       })
-      // console.log(avg_temperature)
     }).catch((retval) => {
       console.log("Error@@", retval)
     })
+  }, []);
+
+  useEffect(() => {
+    // 어제 날짜의 시간별 데이터를 가져오는 함수
+    const fetchYesterdayHourlyData = async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const formattedDate = yesterday.toISOString().split('T')[0];
+
+      try {
+        const response = await axios.get(`http://localhost:8080/api/hourlyData`, {
+          params: {
+            date: formattedDate,
+            uid: localStorage.getItem('uid')
+          }
+        });
+        setYesterdayHourlyData(response.data);
+      } catch (error) {
+        console.error("Error fetching yesterday's hourly data:", error);
+      }
+    };
+
+    fetchYesterdayHourlyData();
   }, []);
 
   if (!yesterdayData) {
@@ -372,78 +355,69 @@ const Main = React.memo(() => {
         </Header>
         <CardContainer>
           <Box sx={{ flexGrow: 1 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={4} sm={4} md={4}>
-              <StyledCard>
-                <StyledCardContent>
-                  <CardTitle variant="h5" component="div">
-                    현재 온습도
-                  </CardTitle>
-                  <br />
-                  <div>
-                    <CardInfo variant="body2" color="text.secondary">
-                      온도: {sensorData.temperature}°C
-                    </CardInfo>
-                    <br />
-                    <CardInfo variant="body2" color="text.secondary">
-                      습도: {sensorData.humidity}%
-                    </CardInfo>
-                  </div>
-                </StyledCardContent>
-              </StyledCard>
-            </Grid>
-            <Grid item xs={4} sm={4} md={4}>
-              <StyledCard onClick={handleOpenModal} 
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
-                          style={{ height: '100%', cursor: 'pointer', hover: '#ccc'}}>
-                {/* <CardActionArea onClick={handleOpenModal} style={{height: '100%'}}> */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={4}>
+                <StyledCard>
                   <StyledCardContent>
-                    <CardTitle variant="h5" component="div">
-                      전날 평균 온습도
-                    </CardTitle>
-                    <br />
+                    <CardTitle variant="h5">현재 온습도</CardTitle>
+                    <Box display="flex" justifyContent="space-around" alignItems="center">
+                      <Box textAlign="center">
+                        <Typography variant="h4" color="primary">{sensorData.temperature}°C</Typography>
+                        <Typography variant="subtitle1">온도</Typography>
+                      </Box>
+                      <Box textAlign="center">
+                        <Typography variant="h4" color="secondary">{sensorData.humidity}%</Typography>
+                        <Typography variant="subtitle1">습도</Typography>
+                      </Box>
+                    </Box>
+                  </StyledCardContent>
+                </StyledCard>
+              </Grid>
+              <Grid item xs={12} md={8}>
+                <StyledCard hoverable onClick={handleOpenModal}>
+                  <StyledCardContent>
+                    <CardTitle variant="h5">전날 평균 온습도</CardTitle>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={yesterdayHourlyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="time" />
+                        <YAxis yAxisId="left" />
+                        <YAxis yAxisId="right" orientation="right" />
+                        <Tooltip />
+                        <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
+                        <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#82ca9d" name="습도" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </StyledCardContent>
+                </StyledCard>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <StyledCard>
+                  <StyledCardContent>
+                    <CardTitle variant="h5">Robot Condition</CardTitle>
                     <div>
                       <CardInfo variant="body2" color="text.secondary">
-                        온도: {yesterdayData.avg_temperature}°C
+                        상태: {robotStatus}
                       </CardInfo>
                       <br />
                       <CardInfo variant="body2" color="text.secondary">
-                        습도: {yesterdayData.avg_humidity}%
+                        배터리: {robotBattery}
                       </CardInfo>
                     </div>
+                    <ToggleButton 
+                      onClick={toggleRobot} 
+                      isrunning={(!topic_context.topicButton).toString()}
+                      style={{marginTop: '16px'}}
+                    >
+                      {!topic_context.topicButton ? 'Stop' : 'Start'}
+                    </ToggleButton>
                   </StyledCardContent>
-                {/* </CardActionArea> */}
-              </StyledCard>
-            </Grid>
-            <Grid item xs={4} sm={4} md={4}>
-              <StyledCard>
-                <StyledCardContent>
-                  <CardTitle variant="h5" component="div">
-                    Robot Condition
-                  </CardTitle>
-                  <div>
-                    <CardInfo variant="body2" color="text.secondary">
-                      상태: {robotStatus}
-                    </CardInfo>
-                    <br />
-                    <CardInfo variant="body2" color="text.secondary">
-                      배터리: {robotBattery}
-                    </CardInfo>
-                  </div>
-                  <ToggleButton 
-                    onClick={toggleRobot} 
-                    isrunning={(!topic_context.topicButton).toString()}
-                    style={{marginTop: '16px'}}
-                  >
-                    {!topic_context.topicButton ? 'Stop' : 'Start'}
-                  </ToggleButton>
-                </StyledCardContent>
-              </StyledCard>
-            </Grid>
-              <Grid item xs={12} md={15}>
-                <Card>
-                  <CardActionArea component={Link} to="/manage">
+                </StyledCard>
+              </Grid>
+              {/* 관리 페이지 카드 */}
+              <Grid item xs={12} md={4}>
+                <StyledCard hoverable> 
+                  <CardActionArea component={Link} to="/manage" sx={{ height: '100%' }}>
                     <CardContent>
                       <Typography gutterBottom variant="h5" component="div">
                         관리 페이지
@@ -453,11 +427,12 @@ const Main = React.memo(() => {
                       </Typography>
                     </CardContent>
                   </CardActionArea>
-                </Card>
+                </StyledCard>
               </Grid>
-              <Grid item xs={12} md={15}>
-                <Card>
-                  <CardActionArea component={Link} to="/obj">
+              {/* 객체 확인 페이지 카드 */}
+              <Grid item xs={12} md={4}>
+                <StyledCard hoverable> 
+                  <CardActionArea component={Link} to="/obj" sx={{ height: '100%' }}>
                     <CardContent>
                       <Typography gutterBottom variant="h5" component="div">
                         객체 확인 페이지
@@ -467,10 +442,12 @@ const Main = React.memo(() => {
                       </Typography>
                     </CardContent>
                   </CardActionArea>
-                </Card>
+                </StyledCard>
               </Grid>
-              <Grid item xs={12} md={15}>
-                <Card>
+              {/* CS 페이지 카드
+              {/* // 주석: md 값을 8로 변경하여 두 열을 차지하도록 합니다. */}
+              {/* <Grid item xs={12} md={8}> 
+                <StyledCard hoverable sx={{ height: '10px' }}>
                   <CardActionArea component={Link} to="/cs">
                     <CardContent>
                       <Typography gutterBottom variant="h5" component="div">
@@ -481,8 +458,8 @@ const Main = React.memo(() => {
                       </Typography>
                     </CardContent>
                   </CardActionArea>
-                </Card>
-              </Grid>
+                </StyledCard>
+              </Grid>  */}
             </Grid>
           </Box>
         </CardContainer>

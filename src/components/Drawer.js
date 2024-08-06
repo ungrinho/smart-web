@@ -176,8 +176,8 @@ export default function MiniDrawer({ children }) {
   // Menu items defined
   const menuItems = [
     { text: '홈', icon: <HomeIcon />, path: '/main' },
-    { text: '객체 확인 페이지', icon: <ControlCameraIcon />, path: '/obj' },
-    { text: '관리페이지', icon: <FormatListBulletedIcon />, path: '/manage' },
+    { text: '객체 확인 페이지', icon: <FormatListBulletedIcon />, path: '/obj' },
+    { text: '관리페이지', icon: <ControlCameraIcon />, path: '/manage' },
     { text: '고객 문의', icon: <ChatIcon />, path: '/cs' },
   ];
 

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card } from '@mui/material';
+import { Card, Tabs, Tab, Grid, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Button from '@mui/material/Button'
 import ROSLIB from 'roslib';
 
 const MainContainer = styled('div')({
@@ -147,19 +144,13 @@ function Manage(){
 
     return(
         <MainContainer>
-            <ToggleButtonGroup
-                color="primary"
-                value={alignment}
-                exclusive
-                onChange={handleChange}
-                aria-label="Platform"
-                >
-                <ToggleButton value="auto" style={{ width: '200px'}}>Auto</ToggleButton>
-                <ToggleButton value="control" style={{ width: '200px', marginRight: 'auto'}}>Hands-on</ToggleButton>
+            <Tabs value={alignment} onChange={handleChange} aria-label="Platform">
+                <Tab value="auto" label="Auto" style={{ width: '200px'}} />
+                <Tab value="control" label="Hands-on" style={{ width: '200px', marginRight: 'auto'}} />
                 {alignment === 'control' && (
                     <Button style={{ border: '1px solid #ccc', minWidth: '100px', backgroundColor: '#EBF5E4', color: 'black'}}>운행종료</Button>
                 )}
-            </ToggleButtonGroup>
+            </Tabs>
             <br />
             <CardContainer>
                 <Card style={{ width: '100%', height: '600px', textAlign:'center'}}>

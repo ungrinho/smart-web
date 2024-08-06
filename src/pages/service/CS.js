@@ -13,7 +13,13 @@ import {
   FormControl,
   FormControlLabel,
   Checkbox,
+  Card,
+  CardContent,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { styled } from '@mui/material/styles';
 
 const FormHelperTexts = styled(FormHelperText)`
@@ -192,6 +198,24 @@ export const CS = () => {
           </form>
         </FormControl>
       </Boxs>
+
+      
+      <Box mt={4}>
+        <Typography variant="h5" gutterBottom>자주 묻는 질문</Typography>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>Q: 서비스 이용 방법은 어떻게 되나요?</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography>
+              A: 서비스 이용 방법에 대한 상세한 설명~~~~
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+        {/* 추가 FAQ 항목들 */}
+      </Box>
+
+
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
