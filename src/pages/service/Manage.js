@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Tab, Button, useMediaQuery } from '@mui/material';
+import { Tabs, Tab, Button, useMediaQuery, Typography } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import ROSLIB from 'roslib';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 
 const MainContainer = styled('div')({
     display: 'flex',
@@ -139,6 +141,12 @@ function Manage(){
             messageType: 'std_msgs/String'
         });
 
+        const statesTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: './states',
+            messageType: 'std_msgs/states'
+        });
+
         setRos(ros);
         setMotorService(motorServiceInstance);
 
@@ -202,13 +210,16 @@ function Manage(){
 
     return(
         <MainContainer>
+            <Typography variant="h4" component="h1" gutterBottom>
+                로봇 관리 페이지
+            </Typography>
             <StyledTabs 
                 value={alignment} 
                 onChange={handleChange} 
                 aria-label="Platform"
             >
-                <StyledTab value="auto" label="Auto" style={{ width: '200px', fontWeight: 'bold'}} />
-                <StyledTab value="control" label="Hands-on" style={{ width: '200px', marginRight: 'auto', fontWeight: 'bold'}} />
+                <StyledTab value="auto" label="Auto" icon={<AutorenewIcon />} style={{ width: '200px', fontWeight: 'bold'}} />
+                <StyledTab value="control" label="Hands-on" icon={<SportsEsportsIcon />} style={{ width: '200px', marginRight: 'auto', fontWeight: 'bold'}} />
                 {alignment === 'control' && (
                     <StyledButton>운행종료</StyledButton>
                 )}
@@ -247,6 +258,9 @@ function Manage(){
                     )}
                 </ImageContainer>
             </CardContainer>
+            {/* <Typography variant="body1" style={{ marginTop: '20px' }}>
+                현재 모드: <strong>{alignment === 'auto' ? '자동' : '수동'}</strong>
+            </Typography> */}
         </MainContainer>
     )
 }

@@ -19,11 +19,11 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import ControlCameraIcon from '@mui/icons-material/ControlCamera';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import ChatIcon from '@mui/icons-material/Chat';
+import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import Badge from '@mui/material/Badge';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import NotificationModal from './NotificationModal';
@@ -173,14 +173,13 @@ export default function MiniDrawer({ children }) {
     return () => unsubscribe();
   }, [navigate]);  // Add navigate to dependency array
 
-  // Menu items defined
+  // 일반 메뉴 아이템
   const menuItems = [
     { text: '홈', icon: <HomeIcon />, path: '/main' },
-    { text: '객체 확인 페이지', icon: <FormatListBulletedIcon />, path: '/obj' },
-    { text: '관리페이지', icon: <ControlCameraIcon />, path: '/manage' },
-    { text: '고객 문의', icon: <ChatIcon />, path: '/cs' },
+    { text: '객체 확인 페이지', icon: <ViewInArIcon />, path: '/obj' },
+    { text: '관리페이지', icon: <SportsEsportsIcon />, path: '/manage' },
+    { text: '고객 문의', icon: <QuestionAnswerIcon />, path: '/cs' },
   ];
-
 
   // Handler to open modal
   const handleModalOpen = () => {
@@ -208,7 +207,7 @@ export default function MiniDrawer({ children }) {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
               Farm Management
             </Typography>
             <IconButton color="inherit" onClick={handleModalOpen}> 
@@ -250,15 +249,31 @@ export default function MiniDrawer({ children }) {
               </ListItem>
             ))}
           </List>
+          <Box sx={{ flexGrow: 1 }} /> {/* 이 Box가 나머지 공간을 차지합니다 */}
           <Divider />
-          <ListItem sx={{ justifyContent: 'center' }}>
-            {open ? 
-              <button size="small" onClick={onLogoutClick}>Sign Out</button> :
-              <button size="small" className="thin" onClick={onLogoutClick}>
-                <LogoutIcon />
-              </button>
-            }
-          </ListItem>
+          <List>
+            <ListItem disablePadding sx={{ display: 'block' }}>
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+                onClick={onLogoutClick}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <LogoutIcon />
+                </ListItemIcon>
+                <ListItemText primary="로그아웃" sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            </ListItem>
+          </List>
         </StyledDrawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
           {children}

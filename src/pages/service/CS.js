@@ -159,7 +159,7 @@ export const CS = () => {
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography>Q: 서비스 이용 방법은 어떻게 되나요?</Typography>
                 </AccordionSummary>
-                <StyledDivider />
+                <Divider variant="middle" />
                 <AccordionDetails>
                   <Typography>
                     A: 서비스 이용 방법에 대한 상세한 설명~~~~

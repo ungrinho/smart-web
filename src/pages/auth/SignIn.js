@@ -115,6 +115,11 @@ const LoginPage = React.memo(() => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            // 배경색 및 그림자 추가
+            backgroundColor: 'background.paper',
+            padding: 3,
+            borderRadius: 2,
+            boxShadow: 3,
           }}
         >
           {/* 로고 아바타 */}
@@ -123,7 +128,7 @@ const LoginPage = React.memo(() => {
           </Avatar>
           
           {/* 페이지 제목 */}
-          <Typography component="h1" variant="h5">
+          <Typography component="h1" variant="h5" sx={{ fontWeight: 'bold' }}>
             SmartFarm Login
           </Typography>
           

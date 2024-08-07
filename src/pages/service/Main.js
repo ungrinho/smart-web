@@ -3,18 +3,26 @@ import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert, LinearProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { AuthContext } from '../../contexts/AuthContext';
 import { topicButtonContext } from '../../App'
 import ChartModal from '../../components/ChartModal';
 import ROSLIB from "roslib"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import ThermostatIcon from '@mui/icons-material/Thermostat';
+import InsertChartIcon from '@mui/icons-material/InsertChart';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import ModeStandbyIcon from '@mui/icons-material/ModeStandby';
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import Battery0BarIcon from '@mui/icons-material/Battery0Bar';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Battery50Icon from '@mui/icons-material/Battery50';
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
-import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+
+
 
 const MainContainer = styled('div')({
   display: 'flex',
@@ -176,26 +184,39 @@ const Main = React.memo(() => {
 
       const topics = message.data.split(",")
       if (topics[0] !== lastBattery) {
+        switch(topics[0]){
+          case 'Battery_High' :
+            setRobotBattery(<BatteryFullIcon/>)
+            break;
+          
+          case 'Battery_Medium' :
+            setRobotBattery(<Battery50Icon/>)
+            break;
 
+          case 'Battery_Low' :
+            setRobotBattery(<Battery0BarIcon/>)
+            break;
+          default:
+            setRobotBattery('');
+        }
+        lastBattery = topics[0];
       }
-      switch(topics[0]){
-        case 'Battery_High' :
-          setRobotBattery(<BatteryFullIcon/>)
-          break;
-        
-        case 'Battery_Medium' :
-          setRobotBattery(<Battery50Icon/>)
-          break;
 
-        case 'Battery_Low' :
-          setRobotBattery(<Battery0BarIcon/>)
-          break;
-        default:
-          setRobotBattery('');
+      if (topics[1] !== lastStatus){
+        switch(topics[1]){
+          case 'running' :
+            setRobotStatus(<DirectionsRunIcon />)
+            break;
+
+          case 'standby' :
+            setRobotStatus(<ModeStandbyIcon />)
+            break;
+
+          default:
+            setRobotStatus('')
+        }
+        lastStatus = topics[1]
       }
-      lastBattery = topics[0];
-
-      setRobotStatus(topics[1])
     });
   }
 
@@ -347,36 +368,112 @@ const Main = React.memo(() => {
     return <div>Loading...</div>;
   }
 
+  const getWeatherStatusMessage = (temperature, humidity) => {
+    if (temperature >= 20 && temperature <= 25 && humidity >= 40 && humidity <= 60) {
+      return "적정 온습도입니다.";
+    } else if (temperature < 20) {
+      return "온도가 낮습니다. 난방이 필요합니다.";
+    } else if (temperature > 25) {
+      return "온도가 높습니다. 환기가 필요합니다.";
+    } else if (humidity < 40) {
+      return "습도가 낮습니다. 가습이 필요합니다.";
+    } else if (humidity > 60) {
+      return "습도가 높습니다. 환기가 필요합니다.";
+    }
+  };
+
+  const getChangeIndicator = (change) => {
+    if (change > 0) {
+      return <span style={{ color: 'red' }}>▲{change}</span>;
+    } else if (change < 0) {
+      return <span style={{ color: 'blue' }}>▼{Math.abs(change)}</span>;
+    } else {
+      return <span>변화없음</span>;
+    }
+  };
+
   return (
     <MainContainer>
       <Content>
         <Header>
-          {my_context.user ? my_context.user.email : "아무개"}의 농장
+          {/* 농장 이름을 더 눈에 띄게 스타일링 */}
+          <Typography variant="h4" component="h1" gutterBottom>
+            {my_context.user ? `${my_context.user.email}의 농장` : "아무개의 농장"}
+          </Typography>
+          {/* 현재 날짜와 시간을 표시하는 요소 추가 */}
+          <Typography variant="subtitle3">
+            {new Date().toLocaleString()}
+          </Typography>
         </Header>
         <CardContainer>
           <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
+              {/* 현재 온습도 카드: 아이콘 추가 및 색상 강조 */}
               <Grid item xs={12} md={4}>
-                <StyledCard>
-                  <StyledCardContent>
-                    <CardTitle variant="h5">현재 온습도</CardTitle>
-                    <Box display="flex" justifyContent="space-around" alignItems="center">
+                <Card>
+                  <CardContent>
+                    <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mb: 2, display: 'flex', alignItems: 'center' }}>
+                      <ThermostatIcon sx={{ mr: 1 }} />
+                      현재 온습도
+                    </Typography>
+                    <Box display="flex" justifyContent="space-around" alignItems="center" mb={2}>
                       <Box textAlign="center">
-                      <Typography variant="h4" color="#e91e63">{sensorData.temperature}°C</Typography>
+                        <Typography variant="h4" color="error">{sensorData.temperature}°C</Typography>
                         <Typography variant="subtitle1">온도</Typography>
                       </Box>
                       <Box textAlign="center">
-                        <Typography variant="h4" color="#3d5afe">{sensorData.humidity}%</Typography>
+                        <Typography variant="h4" color="primary">{sensorData.humidity}%</Typography>
                         <Typography variant="subtitle1">습도</Typography>
-                      </Box> 
+                      </Box>
                     </Box>
-                  </StyledCardContent>
-                </StyledCard>
+                    
+                    {/* 날씨 상태 메시지 */}
+                    <Box mb={2} p={1} bgcolor="background.paper" borderRadius={1}>
+                      <Typography variant="body2" align="center">
+                        {getWeatherStatusMessage(sensorData.temperature, sensorData.humidity)}
+                      </Typography>
+                    </Box>
+                    
+                    {/* 간단한 막대 게이지 */}
+                    <Box mb={2}>
+                      <Typography variant="body2">온도</Typography>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={(sensorData.temperature / 50) * 100} 
+                        sx={{ height: 10, borderRadius: 5 }}
+                      />
+                    </Box>
+                    <Box mb={2}>
+                      <Typography variant="body2">습도</Typography>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={sensorData.humidity} 
+                        sx={{ height: 10, borderRadius: 5 }}
+                      />
+                    </Box>
+                    
+                    {/* 전날 대비 변화 */}
+                    <Box display="flex" justifyContent="space-between">
+                      <Typography variant="body2">
+                        어제 대비 온도: {getChangeIndicator(yesterdayData.avg_temperature - sensorData.temperature)}
+                      </Typography>
+                      <Typography variant="body2">
+                        어제 대비 습도: {getChangeIndicator(yesterdayData.avg_humidity - sensorData.humidity)}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
               </Grid>
+
+              {/* 전날 평균 온습도 카드: 그래프에 애니메이션 효과 추가 */}
               <Grid item xs={12} md={8}>
                 <StyledCard hoverable onClick={handleOpenModal}>
                   <StyledCardContent>
-                    <CardTitle variant="h5">전날 평균 온습도</CardTitle>
+                    <CardTitle variant="h5">
+                      <InsertChartIcon sx={{ mr: 1 }} /> {/* 차트 아이콘 */}
+                      전날 평균 온습도
+                    </CardTitle>
+                    {/* ResponsiveContainer에 애니메이션 속성 추가 */}
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={yesterdayHourlyData}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -391,19 +488,23 @@ const Main = React.memo(() => {
                   </StyledCardContent>
                 </StyledCard>
               </Grid>
+
+              {/* Robot Condition 카드: 상태에 따른 색상 변경 */}
               <Grid item xs={12} md={4}>
                 <StyledCard>
                   <StyledCardContent>
-                    <CardTitle variant="h5">Robot Condition</CardTitle>
-                    <div>
-                      <CardInfo variant="body2" color="text.secondary">
-                        상태: {robotStatus}
-                      </CardInfo>
-                      <br />
-                      <CardInfo variant="body2" color="text.secondary">
-                        배터리: {robotBattery}
-                      </CardInfo>
-                    </div>
+                    <CardTitle variant="h5">
+                      <SmartToyIcon sx={{ mr: 1 }} /> {/* 로봇 아이콘 */}
+                      Robot Condition
+                    </CardTitle>
+                    {/* 로봇 상태에 따라 색상 변경 */}
+                    <CardInfo variant="body2" color="text.secondary">
+                      상태: {robotStatus}
+                    </CardInfo>
+                    <br />
+                    <CardInfo variant="body2" color="text.secondary">
+                      배터리: {robotBattery}
+                    </CardInfo>
                     <ToggleButton 
                       onClick={toggleRobot} 
                       isrunning={(!topic_context.topicButton).toString()}
@@ -414,52 +515,49 @@ const Main = React.memo(() => {
                   </StyledCardContent>
                 </StyledCard>
               </Grid>
-              {/* 관리 페이지 카드 */}
+
+              {/* 관리 페이지 카드: 호버 효과 강화 */}
               <Grid item xs={12} md={4}>
                 <StyledCard hoverable> 
-                  <CardActionArea component={Link} to="/manage" sx={{ height: '100%' }}>
+                  <CardActionArea component={Link} to="/manage" sx={{ height: '100%', transition: 'all 0.3s' }}>
                     <CardContent>
                       <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                        <SportsEsportsIcon sx={{ mr: 1 }} /> {/* 설정 아이콘 */}
                         관리 페이지
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        이동하기
+                        실시간 객체 탐지 영상 확인
                       </Typography>
                     </CardContent>
                   </CardActionArea>
                 </StyledCard>
               </Grid>
-              {/* 객체 확인 페이지 카드 */}
+
+              {/* 객체 확인 페이지 카드: 배경 이미지 추가 */}
               <Grid item xs={12} md={4}>
-                <StyledCard hoverable> 
-                  <CardActionArea component={Link} to="/obj" sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="div">
+                <StyledCard hoverable>
+                  <CardActionArea 
+                    component={Link} 
+                    to="/obj" 
+                    sx={{ 
+                      height: '100%', 
+                      backgroundImage: 'url("/path/to/object-detection-image.jpg")',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  >
+                    <CardContent sx={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
+                      <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                        <ViewInArIcon sx={{ mr: 1 }} /> {/* 가시성 아이콘 */}
                         객체 확인 페이지
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        이동하기
+                        실시간 객체 탐지 결과 확인
                       </Typography>
                     </CardContent>
                   </CardActionArea>
                 </StyledCard>
               </Grid>
-              {/* CS 페이지 카드
-              {/* // 주석: md 값을 8로 변경하여 두 열을 차지하도록 합니다. */}
-              {/* <Grid item xs={12} md={8}> 
-                <StyledCard hoverable sx={{ height: '10px' }}>
-                  <CardActionArea component={Link} to="/cs">
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="div">
-                        CS 페이지
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        이동하기
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </StyledCard>
-              </Grid>  */}
             </Grid>
           </Box>
         </CardContainer>

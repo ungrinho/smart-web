@@ -4,7 +4,6 @@ import ROSLIB from "roslib";
 function ROSAlarm({ onNotification }) {
   const [currentBatteryStatus, setCurrentBatteryStatus] = useState(null);
   const [currentDriveStatus, setCurrentDriveStatus] = useState(null);
-  const [currentStandbyStatus, setCurrentStandbyStatus] = useState(null);
 
   useEffect(() => {
     // ROS 연결 설정
@@ -12,57 +11,35 @@ function ROSAlarm({ onNotification }) {
       url: 'ws://192.168.0.13:9090'
     });
 
-    const ROSConnect = () => {};
-
-    // const ROSConnect = () => {
-    //   try {
-    //     ros.on("connection", () => {
-    //       console.log("Connected to websocket server.");
-    //       subscribeToTopics(ros);
-    //     });
-    //     ros.on("error", (error) => {
-    //       console.log("Error connecting to websocket server:", error);
-    //     });
-    //     ros.on("close", () => {
-    //       console.log("Connection to websocket server closed.");
-    //     });
-    //   } catch (error) {
-    //     console.log("Failed to construct websocket. The URL is invalid:", error);
-    //   }
-    // };
+    const ROSConnect = () => {
+      try {
+        ros.on("connection", () => {
+          console.log("Connected to websocket server.");
+          subscribeToTopics(ros);
+        });
+        ros.on("error", (error) => {
+          console.log("Error connecting to websocket server:", error);
+        });
+        ros.on("close", () => {
+          console.log("Connection to websocket server closed.");
+        });
+      } catch (error) {
+        console.log("Failed to construct websocket. The URL is invalid:", error);
+      }
+    };
 
     const subscribeToTopics = (ros) => {
-      // 배터리 상태 토픽 구독
-      const batteryListener = new ROSLIB.Topic({
+      const statesListener = new ROSLIB.Topic({
         ros: ros,
-        name: '/jetbot_mini/battery',
+        name: '/jetbot_mini/states',
         messageType: 'std_msgs/String'
       });
 
-      batteryListener.subscribe((message) => {
-        handleBatteryStatus(message.data);
-      });
-
-      // 주행 완료 토픽 구독
-      const driveListener = new ROSLIB.Topic({
-        ros: ros,
-        name: '/jetbot_mini/drive_status',
-        messageType: 'std_msgs/String'
-      });
-
-      driveListener.subscribe((message) => {
-        handleDriveStatus(message.data);
-      });
-
-      // 대기 상태 토픽 구독
-      const standbyListener = new ROSLIB.Topic({
-        ros: ros,
-        name: '/jetbot_mini/standby_status',
-        messageType: 'std_msgs/String'
-      });
-
-      standbyListener.subscribe((message) => {
-        handleStandbyStatus(message.data);
+      statesListener.subscribe((message) => {
+        console.log("Received message:", message.data);
+        const topics = message.data.split(",");
+        handleBatteryStatus(topics[0]);
+        handleDriveStatus(topics[1]);
       });
     };
 
@@ -117,20 +94,6 @@ function ROSAlarm({ onNotification }) {
       }
     };
 
-    // 대기 상태 처리 함수
-    const handleStandbyStatus = (status) => {
-      if (status !== currentStandbyStatus) {
-        setCurrentStandbyStatus(status);
-        if (status === 'stanby') {
-          onNotification({
-            severity: 'info',
-            title: '대기 상태',
-            message: '로봇이 대기 상태입니다.'
-          });
-        }
-      }
-    };
-
     ROSConnect();
 
     // 컴포넌트 언마운트 시 연결 해제
@@ -139,7 +102,7 @@ function ROSAlarm({ onNotification }) {
         ros.close();
       }
     };
-  }, [onNotification, currentBatteryStatus, currentDriveStatus, currentStandbyStatus]);
+  }, [onNotification, currentBatteryStatus, currentDriveStatus]);
 
   return null; // 이 컴포넌트는 UI를 렌더링하지 않습니다.
 }

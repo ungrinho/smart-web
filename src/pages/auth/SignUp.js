@@ -112,98 +112,102 @@ const SignUp = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            // 배경색 및 그림자 추가
+            backgroundColor: 'background.paper',
+            padding: 3,
+            borderRadius: 2,
+            boxShadow: 3,
+            width: '100%',
+            maxWidth: '400px',
           }}
         >
-
           <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }} />
-          <Typography component="h1" variant="h5">
+          <Typography component="h1" variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
             Sign Up
           </Typography>
-          <Boxs component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-            <FormControl component="fieldset" variant="standard">
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    id="email"
-                    label="Email Address"
-                    name="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    error={emailError !== ''}
-                  />
-                  <FormHelperTexts>{emailError}</FormHelperTexts>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    name="password"
-                    label="Password"
-                    type="password"
-                    id="password"
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    error={passwordError !== ''}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    name="rePassword"
-                    label="rePassword"
-                    type="password"
-                    id="rePassword"
-                    value={rePassword}
-                    onChange={(e) => setRePassword(e.target.value)}
-                    error={passwordError !== ''}
-                  />
-                  <FormHelperTexts>{passwordError}</FormHelperTexts>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    id="name"
-                    label="Name"
-                    name="name"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    error={nameError !== ''}
-                  />
-                  <FormHelperTexts>{nameError}</FormHelperTexts>
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={<Checkbox value="allowExtraEmails" color="primary" checked={checked} onChange={handleAgree} />}
-                    label="Agree With These Terms."
-                  />
-                </Grid>
+          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  error={emailError !== ''}
+                />
+                <FormHelperTexts>{emailError}</FormHelperTexts>
               </Grid>
-              <CustomButton
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                Sign Up
-              </CustomButton>
-              <Grid container justifyContent="center">
-                <Grid item>
-                  <span>You have an account already? </span>
-                  <Link to="/signin" variant="body2" style={{ textDecoration: 'underline', color: 'blue' }}>
-                    <span>Sign In</span>
-                  </Link>
-                </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  error={passwordError !== ''}
+                />
               </Grid>
-            </FormControl>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="rePassword"
+                  label="Confirm Password"
+                  type="password"
+                  id="rePassword"
+                  value={rePassword}
+                  onChange={(e) => setRePassword(e.target.value)}
+                  error={passwordError !== ''}
+                />
+                <FormHelperTexts>{passwordError}</FormHelperTexts>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="name"
+                  label="Name"
+                  name="name"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  error={nameError !== ''}
+                />
+                <FormHelperTexts>{nameError}</FormHelperTexts>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={<Checkbox value="allowExtraEmails" color="primary" checked={checked} onChange={handleAgree} />}
+                  label="I agree to the terms and conditions"
+                />
+              </Grid>
+            </Grid>
+            <CustomButton
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Sign Up
+            </CustomButton>
+            <Grid container justifyContent="center">
+              <Grid item>
+                Already have an account?
+                <Link to="/signin" variant="body2">
+                  Sign In
+                </Link>
+              </Grid>
+            </Grid>
             <FormHelperTexts>{registerError}</FormHelperTexts>
-          </Boxs>
+          </Box>
         </Box>
       </Container>
     </ThemeProvider>
