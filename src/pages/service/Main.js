@@ -3,13 +3,13 @@ import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert, LinearProgress } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert, LinearProgress, CircularProgress, Tooltip, Paper, Chip, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { AuthContext } from '../../contexts/AuthContext';
 import { topicButtonContext } from '../../App'
 import ChartModal from '../../components/ChartModal';
 import ROSLIB from "roslib"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import InsertChartIcon from '@mui/icons-material/InsertChart';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -20,6 +20,9 @@ import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import Battery0BarIcon from '@mui/icons-material/Battery0Bar';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Battery50Icon from '@mui/icons-material/Battery50';
+import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
+import OpacityIcon from '@mui/icons-material/Opacity';
+import WarningIcon from '@mui/icons-material/Warning';
 
 
 
@@ -95,6 +98,23 @@ const hoverStyle = {
   backgroundColor: '#f0f0f0',
 };
 
+const GaugeContainer = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+  backgroundColor: theme.palette.background.default,
+}));
+
+const GaugeLabel = styled(Typography)(({ theme }) => ({
+  marginLeft: theme.spacing(2),
+  flex: 1,
+}));
+
+const StatusAlert = styled(Alert)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+}));
+
 const Main = React.memo(() => {
   const navigate = useNavigate();
   const [farmName, setFarmName] = useState('');
@@ -114,21 +134,37 @@ const Main = React.memo(() => {
   const [ros, setRos] = useState(null);
   const [startPublisher, setStartPublisher] = useState(null);
   const [yesterdayHourlyData, setYesterdayHourlyData] = useState([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   console.log("my_context", my_context.user)
   console.log("topic_context", topic_context)
   console.log("topic_context", topic_context.topicButton)
 
-  // 로그인 관련
-  useEffect(() => {
+   // 로그인 관련
+   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
         localStorage.setItem("uid", user.uid)
+        fetchFarmName(user.uid)
       } else {
         localStorage.setItem("uid", null)
       }
     });
   }, [])
+  
+  const fetchFarmName = async (uid) => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/users/getFarmName', {
+        params: { uid }
+      });
+      setFarmName(response.data); // Assuming the response contains the name
+      console.log("name set success")
+      console.log(response.data)
+    } catch (error) {
+      console.error("Error fetching farm name:", error);
+      setFarmName("아무개의 농장"); // Default name if there's an error
+    }
+  };
   
   useEffect(() => {
     sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
@@ -364,22 +400,32 @@ const Main = React.memo(() => {
     fetchYesterdayHourlyData();
   }, []);
 
+  // 실시간 시간 업데이트를 위한 useEffect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   if (!yesterdayData) {
     return <div>Loading...</div>;
   }
 
   const getWeatherStatusMessage = (temperature, humidity) => {
     if (temperature >= 20 && temperature <= 25 && humidity >= 40 && humidity <= 60) {
-      return "적정 온습도입니다.";
+      return { message: "적정 온습도입니다.", severity: "success" };
     } else if (temperature < 20) {
-      return "온도가 낮습니다. 난방이 필요합니다.";
+      return { message: "온도가 낮습니다. 난방이 필요합니다.", severity: "warning" };
     } else if (temperature > 25) {
-      return "온도가 높습니다. 환기가 필요합니다.";
+      return { message: "온도가 높습니다. 환기가 필요합니다.", severity: "warning" };
     } else if (humidity < 40) {
-      return "습도가 낮습니다. 가습이 필요합니다.";
+      return { message: "습도가 낮습니다. 가습이 필요합니다.", severity: "warning" };
     } else if (humidity > 60) {
-      return "습도가 높습니다. 환기가 필요합니다.";
+      return { message: "습도가 높습니다. 환기가 필요합니다.", severity: "warning" };
     }
+    return { message: "온습도를 확인해주세요.", severity: "info" };
   };
 
   const getChangeIndicator = (change) => {
@@ -392,137 +438,188 @@ const Main = React.memo(() => {
     }
   };
 
+  const getTemperatureColor = (temp) => {
+    if (temp < 10) return '#3f51b5'; // 파랑 (춥다)
+    if (temp < 20) return '#4caf50'; // 초록 (서늘하다)
+    if (temp < 30) return '#ff9800'; // 주황 (따뜻하다)
+    return '#f44336'; // 빨강 (덥다)
+  };
+
+  const getHumidityColor = (humidity) => {
+    if (humidity < 30) return '#f44336'; // 빨강 (건조)
+    if (humidity < 50) return '#ff9800'; // 주황 (약간 건조)
+    if (humidity < 70) return '#4caf50'; // 초록 (적정)
+    return '#3f51b5'; // 파랑 (습함)
+  };
+
   return (
     <MainContainer>
       <Content>
         <Header>
-          {/* 농장 이름을 더 눈에 띄게 스타일링 */}
           <Typography variant="h4" component="h1" gutterBottom>
-            {my_context.user ? `${my_context.user.email}의 농장` : "아무개의 농장"}
+            {farmName} 님의 농장
           </Typography>
-          {/* 현재 날짜와 시간을 표시하는 요소 추가 */}
-          <Typography variant="subtitle3">
-            {new Date().toLocaleString()}
+          <Typography variant="subtitle1">
+            {currentTime.toLocaleString()}
           </Typography>
         </Header>
         <CardContainer>
           <Box sx={{ flexGrow: 1 }}>
             <Grid container spacing={3}>
-              {/* 현재 온습도 카드: 아이콘 추가 및 색상 강조 */}
-              <Grid item xs={12} md={4}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mb: 2, display: 'flex', alignItems: 'center' }}>
-                      <ThermostatIcon sx={{ mr: 1 }} />
-                      현재 온습도
-                    </Typography>
-                    <Box display="flex" justifyContent="space-around" alignItems="center" mb={2}>
-                      <Box textAlign="center">
-                        <Typography variant="h4" color="error">{sensorData.temperature}°C</Typography>
-                        <Typography variant="subtitle1">온도</Typography>
-                      </Box>
-                      <Box textAlign="center">
-                        <Typography variant="h4" color="primary">{sensorData.humidity}%</Typography>
-                        <Typography variant="subtitle1">습도</Typography>
-                      </Box>
-                    </Box>
-                    
-                    {/* 날씨 상태 메시지 */}
-                    <Box mb={2} p={1} bgcolor="background.paper" borderRadius={1}>
-                      <Typography variant="body2" align="center">
-                        {getWeatherStatusMessage(sensorData.temperature, sensorData.humidity)}
-                      </Typography>
-                    </Box>
-                    
-                    {/* 간단한 막대 게이지 */}
-                    <Box mb={2}>
-                      <Typography variant="body2">온도</Typography>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={(sensorData.temperature / 50) * 100} 
-                        sx={{ height: 10, borderRadius: 5 }}
-                      />
-                    </Box>
-                    <Box mb={2}>
-                      <Typography variant="body2">습도</Typography>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={sensorData.humidity} 
-                        sx={{ height: 10, borderRadius: 5 }}
-                      />
-                    </Box>
-                    
-                    {/* 전날 대비 변화 */}
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography variant="body2">
-                        어제 대비 온도: {getChangeIndicator(yesterdayData.avg_temperature - sensorData.temperature)}
-                      </Typography>
-                      <Typography variant="body2">
-                        어제 대비 습도: {getChangeIndicator(yesterdayData.avg_humidity - sensorData.humidity)}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* 전날 평균 온습도 카드: 그래프에 애니메이션 효과 추가 */}
-              <Grid item xs={12} md={8}>
-                <StyledCard hoverable onClick={handleOpenModal}>
-                  <StyledCardContent>
-                    <CardTitle variant="h5">
-                      <InsertChartIcon sx={{ mr: 1 }} /> {/* 차트 아이콘 */}
-                      전날 평균 온습도
-                    </CardTitle>
-                    {/* ResponsiveContainer에 애니메이션 속성 추가 */}
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={yesterdayHourlyData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis yAxisId="left" />
-                        <YAxis yAxisId="right" orientation="right" />
-                        <Tooltip />
-                        <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
-                        <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#3d5afe" name="습도" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </StyledCardContent>
-                </StyledCard>
-              </Grid>
-
-              {/* Robot Condition 카드: 상태에 따른 색상 변경 */}
+              {/* 현재 온습도 카드 */}
               <Grid item xs={12} md={4}>
                 <StyledCard>
                   <StyledCardContent>
                     <CardTitle variant="h5">
-                      <SmartToyIcon sx={{ mr: 1 }} /> {/* 로봇 아이콘 */}
-                      Robot Condition
+                      <ThermostatIcon sx={{ mr: 1 }} />
+                      현재 온습도
                     </CardTitle>
-                    {/* 로봇 상태에 따라 색상 변경 */}
-                    <CardInfo variant="body2" color="text.secondary">
-                      상태: {robotStatus}
-                    </CardInfo>
-                    <br />
-                    <CardInfo variant="body2" color="text.secondary">
-                      배터리: {robotBattery}
-                    </CardInfo>
-                    <ToggleButton 
-                      onClick={toggleRobot} 
-                      isrunning={(!topic_context.topicButton).toString()}
-                      style={{marginTop: '16px'}}
+                    
+                    {/* 온도 게이지: 동적 색상과 선형 진행 막대를 사용하여 온도를 시각화 */}
+                    <GaugeContainer elevation={3}>
+                      <DeviceThermostatIcon color="error" />
+                      <GaugeLabel variant="body1">온도: {sensorData.temperature}°C</GaugeLabel>
+                      <Box sx={{ width: '50%' }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(sensorData.temperature / 50) * 100}
+                          sx={{ 
+                            height: 10, 
+                            borderRadius: 5,
+                            backgroundColor: '#e0e0e0',
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: getTemperatureColor(sensorData.temperature),
+                            },
+                          }}
+                        />
+                      </Box>
+                    </GaugeContainer>
+
+                    {/* 습도 게이지: 동적 색상과 선형 진행 막대를 사용하여 습도를 시각화 */}
+                    <GaugeContainer elevation={3}>
+                      <OpacityIcon color="primary" />
+                      <GaugeLabel variant="body1">습도: {sensorData.humidity}%</GaugeLabel>
+                      <Box sx={{ width: '50%' }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={sensorData.humidity}
+                          sx={{ 
+                            height: 10, 
+                            borderRadius: 5,
+                            backgroundColor: '#e0e0e0',
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: getHumidityColor(sensorData.humidity),
+                            },
+                          }}
+                        />
+                      </Box>
+                    </GaugeContainer>
+
+                    {/* 날씨 상태 메시지: 온습도 상태에 따라 다른 메시지와 심각도로 Alert를 표시 */}
+                    <StatusAlert 
+                      severity={getWeatherStatusMessage(sensorData.temperature, sensorData.humidity).severity}
+                      icon={<WarningIcon />}
                     >
-                      {!topic_context.topicButton ? 'Stop' : 'Start'}
-                    </ToggleButton>
+                      {getWeatherStatusMessage(sensorData.temperature, sensorData.humidity).message}
+                    </StatusAlert>
                   </StyledCardContent>
                 </StyledCard>
               </Grid>
 
-              {/* 관리 페이지 카드: 호버 효과 강화 */}
+              {/* 전날 평균 온습도 카드 */}
+              <Grid item xs={12} md={8}>
+                <StyledCard hoverable onClick={handleOpenModal}>
+                  <StyledCardContent>
+                    <CardTitle variant="h5">
+                      <InsertChartIcon sx={{ mr: 1 }} />
+                      전날 평균 온습도
+                    </CardTitle>
+                    <Box sx={{ height: 'calc(100% - 40px)', minHeight: '300px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={yesterdayHourlyData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="time" />
+                          <YAxis yAxisId="left" />
+                          <YAxis yAxisId="right" orientation="right" />
+                          <Tooltip />
+                          <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
+                          <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#82ca9d" name="습도" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  </StyledCardContent>
+                </StyledCard>
+              </Grid>
+
+              {/* Robot Condition 카드 */}
+              <Grid item xs={12} md={4}>
+                <StyledCard>
+                  <StyledCardContent>
+                    <CardTitle variant="h5">
+                      <SmartToyIcon sx={{ mr: 1 }} />
+                      Robot Condition
+                    </CardTitle>
+                    
+                    {/* 로봇 상태 표시: Chip 컴포넌트를 사용하여 현재 상태를 시각적으로 표현 */}
+                    <Box display="flex" alignItems="center" mb={2}>
+                      <Typography variant="body1" sx={{ mr: 1, minWidth: '60px' }}>상태:</Typography>
+                      <Chip 
+                        icon={robotStatus === 'running' ? <DirectionsRunIcon /> : <ModeStandbyIcon />}
+                        label={robotStatus === 'running' ? "작동 중" : "대기 중"}
+                        color={robotStatus === 'running' ? "success" : "default"}
+                        sx={{ width: '100%' }}
+                      />
+                    </Box>
+                    
+                    {/* 배터리 상태 표시: LinearProgress를 사용하여 배터리 레벨을 시각화하고 아이콘으로 보완 */}
+                    <Box display="flex" alignItems="center" mb={2}>
+                      <Typography variant="body1" sx={{ mr: 1, minWidth: '60px' }}>배터리:</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={robotBattery === 'Battery_High' ? 100 : robotBattery === 'Battery_Medium' ? 50 : 20}
+                          sx={{ 
+                            flexGrow: 1,
+                            height: 10, 
+                            borderRadius: 5,
+                            backgroundColor: '#e0e0e0',
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: robotBattery === 'Battery_High' ? '#4caf50' : 
+                                               robotBattery === 'Battery_Medium' ? '#ff9800' : '#f44336',
+                            },
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ ml: 1, minWidth: '50px' }}>
+                          {robotBattery === 'Battery_High' ? '높음' : 
+                           robotBattery === 'Battery_Medium' ? '중간' : '낮음'}
+                        </Typography>
+                        {robotBattery === 'Battery_High' && <BatteryFullIcon color="success" sx={{ ml: 1 }} />}
+                        {robotBattery === 'Battery_Medium' && <Battery50Icon color="warning" sx={{ ml: 1 }} />}
+                        {robotBattery === 'Battery_Low' && <Battery0BarIcon color="error" sx={{ ml: 1 }} />}
+                      </Box>
+                    </Box>
+                    
+                    {/* 로봇 제어 버튼: 상태에 따라 색상과 아이콘이 변경되는 버튼 */}
+                    <Button
+                      variant="contained"
+                      onClick={toggleRobot}
+                      color={!topic_context.topicButton ? "error" : "success"}
+                      fullWidth
+                      startIcon={!topic_context.topicButton ? <ModeStandbyIcon /> : <DirectionsRunIcon />}
+                    >
+                      {!topic_context.topicButton ? '로봇 정지' : '로봇 시작'}
+                    </Button>
+                  </StyledCardContent>
+                </StyledCard>
+              </Grid>
+
+              {/* 관리 페이지 카드 */}
               <Grid item xs={12} md={4}>
                 <StyledCard hoverable> 
                   <CardActionArea component={Link} to="/manage" sx={{ height: '100%', transition: 'all 0.3s' }}>
                     <CardContent>
                       <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                        <SportsEsportsIcon sx={{ mr: 1 }} /> {/* 설정 아이콘 */}
+                        <SportsEsportsIcon sx={{ mr: 1 }} />
                         관리 페이지
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -533,7 +630,7 @@ const Main = React.memo(() => {
                 </StyledCard>
               </Grid>
 
-              {/* 객체 확인 페이지 카드: 배경 이미지 추가 */}
+              {/* 객체 확인 페이지 카드 */}
               <Grid item xs={12} md={4}>
                 <StyledCard hoverable>
                   <CardActionArea 
@@ -548,7 +645,7 @@ const Main = React.memo(() => {
                   >
                     <CardContent sx={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
                       <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                        <ViewInArIcon sx={{ mr: 1 }} /> {/* 가시성 아이콘 */}
+                        <ViewInArIcon sx={{ mr: 1 }} />
                         객체 확인 페이지
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -573,3 +670,24 @@ const Main = React.memo(() => {
 });
 
 export default Main;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

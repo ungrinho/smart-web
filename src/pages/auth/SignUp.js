@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../config/firebase';
+import { auth } from '../../config/firebase'; // auth 객체 임포트
 import {
   Avatar,
   CssBaseline,
   TextField,
-  FormControl,
   FormControlLabel,
   Checkbox,
   Grid,
@@ -17,8 +16,6 @@ import {
 } from '@mui/material';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 import CustomButton from '../../components/CustomButton';
-
-
 
 const FormHelperTexts = styled(FormHelperText)`
   width: 100%;
@@ -53,7 +50,6 @@ const SignUp = () => {
 
     // Validation
     const emailRegex = /([\w-.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
-    // const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$/; // 비밀번호 조합 조건까지
     const nameRegex = /^[가-힣a-zA-Z]+$/;
 
     if (!emailRegex.test(email)) {
@@ -62,17 +58,6 @@ const SignUp = () => {
     } else {
       setEmailError('');
     }
-
-    // // 비밀번호 조합 조건까지
-    // if (!passwordRegex.test(password)) {
-    //   setPasswordError('숫자+영문자+특수문자 조합으로 8자리 이상 입력해주세요!');
-    //   return;
-    // } else if (password !== rePassword) {
-    //   setPasswordError('비밀번호가 일치하지 않습니다.');
-    //   return;
-    // } else {
-    //   setPasswordError('');
-    // }
 
     if (password !== rePassword) {
       setPasswordError('비밀번호가 일치하지 않습니다.');
@@ -94,11 +79,28 @@ const SignUp = () => {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/main');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+
+      // 백엔드로 유저 정보 전송
+      const response = await fetch('http://localhost:8080/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, uid }),
+      });
+
+      if (response.ok) {
+        console.log('User registered successfully');
+        navigate('/main');
+      } else {
+        console.error('Failed to register user');
+        setRegisterError('회원가입에 실패하였습니다. 다시 시도해주세요.');
+      }
     } catch (error) {
-      console.error('회원가입 에러:', error);
-      setRegisterError('회원가입에 실패하였습니다. 다시 한 번 확인해 주세요.');
+      console.error('Error registering user:', error);
+      setRegisterError('회원가입에 실패하였습니다. 다시 시도해주세요.');
     }
   };
 
