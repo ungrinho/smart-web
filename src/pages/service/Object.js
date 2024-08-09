@@ -71,14 +71,12 @@ function Row(props) {
     const [open, setOpen] = React.useState(false);
     const [selectedCategory, setSelectedCategory] = React.useState(null);
 
-    // 카테고리 클릭 시 해당 카테고리의 이미지 목록을 토글합니다.
     const handleCategoryClick = (category) => {
         setSelectedCategory(category === selectedCategory ? null : category);
     };
 
     return (
         <React.Fragment>
-            {/* 메인 행: 트리 번호와 총 개수를 표시 */}
             <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
                 <TableCell>
                     <IconButton
@@ -94,7 +92,6 @@ function Row(props) {
                 </TableCell>
                 <TableCell align="right">{row.total}</TableCell>
             </TableRow>
-            {/* 확장 행: 카테고리별 상세 정보를 표시 */}
             <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
@@ -110,7 +107,6 @@ function Row(props) {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {/* 각 카테고리별 정보를 표시 */}
                                     {Object.entries(row.categories).map(([category, count]) => (
                                         <React.Fragment key={category}>
                                             <TableRow onClick={() => handleCategoryClick(category)}>
@@ -119,16 +115,17 @@ function Row(props) {
                                                 </ClickTableCell>
                                                 <TableCell align="right">{count}</TableCell>
                                             </TableRow>
-                                            {/* 선택된 카테고리의 이미지 목록을 표시 */}
                                             {selectedCategory === category && (
                                                 <TableRow>
                                                     <TableCell colSpan={2}>
                                                         <List>
-                                                            {row.images[category.toLowerCase()].map((image, index) => (
+                                                            {row.images[category.toLowerCase()] && 
+                                                              row.images[category.toLowerCase()].map((image, index) => (
                                                                 <ListItem key={index} button onClick={() => onImageClick(image.fileName)}>
                                                                     <ListItemText primary={image.fileName} />
                                                                 </ListItem>
-                                                            ))}
+                                                            ))
+                                                            }
                                                         </List>
                                                     </TableCell>
                                                 </TableRow>
@@ -144,6 +141,7 @@ function Row(props) {
         </React.Fragment>
     );
 }
+
 
 // Object 컴포넌트: 메인 페이지 구성
 function Object() {
@@ -198,7 +196,7 @@ function Object() {
     const groupedMetadata = imageMetadata.reduce((acc, meta) => {
       const [treeNumber, category] = meta.fileName.split('-');
       if (!acc[treeNumber]) {
-          acc[treeNumber] = { ripe: [], unripe: [], green: [] };
+          acc[treeNumber] = { ripe: [], unripe: [], halfripe: [] };
       }
       if (acc[treeNumber][category.toLowerCase()]) {
           acc[treeNumber][category.toLowerCase()].push(meta);
@@ -212,11 +210,11 @@ function Object() {
     const rows = Object.entries(groupedMetadata).map(([treeNumber, categories]) => ({
       date: selectedDate,
       treeNumber: `Tree ${treeNumber}`,
-      total: categories.ripe.length + categories.unripe.length + categories.green.length,
+      total: categories.ripe.length + categories.unripe.length + categories.halfripe.length,
       categories: {
           'Ripe': categories.ripe.length,
           'Unripe': categories.unripe.length,
-          'Green': categories.green.length
+          'Half-Ripe': categories.halfripe.length
       },
       images: categories
     }));
@@ -271,7 +269,7 @@ function Object() {
                         <TableBody>
                             {/* 각 트리에 대한 Row 컴포넌트를 렌더링 */}
                             {rows.map((row) => (
-                                <Row key={row.treeNumber} row={row} onImageClick={handleImageClick} />
+                                <Row key={row.treeNumber} row={row} onImageClick={handleImageClick} /> 
                             ))}
                         </TableBody>
                     </Table>

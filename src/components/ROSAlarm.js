@@ -80,16 +80,34 @@ function ROSAlarm({ onNotification }) {
       }
     };
 
-    // 주행 상태 처리 함수
+    // 주행 상태 처리 함수 수정
     const handleDriveStatus = (status) => {
       if (status !== currentDriveStatus) {
         setCurrentDriveStatus(status);
-        if (status === 'Drive_Completed') {
-          onNotification({
-            severity: 'success',
-            title: '객체 탐지 완료!',
-            message: '로봇이 순찰을 완료하였습니다. 익은 토마토의 개수는 총 {}개 입니다.'
-          });
+        switch (status) {
+          case 'running':
+            onNotification({
+              severity: 'info',
+              title: '로봇 작동 중',
+              message: '로봇이 작동을 시작했습니다.'
+            });
+            break;
+          case 'standby':
+            onNotification({
+              severity: 'warning',
+              title: '로봇 대기 중',
+              message: '로봇이 작동을 멈췄습니다.'
+            });
+            break;
+          case 'Drive_Completed':
+            onNotification({
+              severity: 'success',
+              title: '객체 탐지 완료!',
+              message: '로봇이 순찰을 완료하였습니다. 익은 토마토의 개수는 총 {}개 입니다.'
+            });
+            break;
+          default:
+            break;
         }
       }
     };

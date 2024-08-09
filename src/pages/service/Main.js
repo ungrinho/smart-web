@@ -3,7 +3,7 @@ import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert, LinearProgress, CircularProgress, Tooltip, Paper, Chip, Button } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert, LinearProgress, CircularProgress, Tooltip, Paper, Chip, Button, Badge, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { AuthContext } from '../../contexts/AuthContext';
 import { topicButtonContext } from '../../App'
@@ -23,6 +23,15 @@ import Battery50Icon from '@mui/icons-material/Battery50';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import WarningIcon from '@mui/icons-material/Warning';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ROSAlarm from '../../components/ROSAlarm';  // ROSAlarm 컴포넌트 import 추가
+import NotificationModal from '../../components/NotificationModal';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StopIcon from '@mui/icons-material/Stop';
+import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import RecommendIcon from '@mui/icons-material/Recommend';
 
 
 
@@ -128,8 +137,9 @@ const Main = React.memo(() => {
   const reconnectAttempts = useRef(0);
   const my_context = useContext(AuthContext);
   const topic_context = useContext(topicButtonContext);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [yesterdayData, setYesterdayData] = useState({ avg_temperature: null, avg_humidity: null });
   const [ros, setRos] = useState(null);
   const [startPublisher, setStartPublisher] = useState(null);
@@ -213,7 +223,21 @@ const Main = React.memo(() => {
       messageType: 'std_msgs/String'
     });
 
+ 
+    const rqDonePublisher = new ROSLIB.Topic({
+      ros: ros,
+      name: '/qr_code_topic',
+      messageType: 'jetbotmini_msgs/Tree'
+    });
+
     setStartPublisher(newStartPublisher);
+
+    rqDonePublisher.subscribe((message) => {
+      if(message.tree == "autoplay mode is done"){
+        
+      topic_context.setTopicButton(true)
+      }
+    })
 
     statesListener.subscribe((message) => {
       console.log("이것이 메시지 :", message.data)
@@ -222,15 +246,15 @@ const Main = React.memo(() => {
       if (topics[0] !== lastBattery) {
         switch(topics[0]){
           case 'Battery_High' :
-            setRobotBattery(<BatteryFullIcon/>)
+            setRobotBattery('Battery_High')
             break;
           
           case 'Battery_Medium' :
-            setRobotBattery(<Battery50Icon/>)
+            setRobotBattery('Battery_Medium')
             break;
 
           case 'Battery_Low' :
-            setRobotBattery(<Battery0BarIcon/>)
+            setRobotBattery('Battery_Low')
             break;
           default:
             setRobotBattery('');
@@ -256,6 +280,34 @@ const Main = React.memo(() => {
     });
   }
 
+  // 알림 추가 함수
+  const addNotification = (notification) => {
+    setNotifications(prev => [...prev, { ...notification, id: Date.now(), timestamp: new Date() }]);
+  };
+
+  // 알림 삭제 함수
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  // 모든 알림 삭제 함수
+  const removeAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  // 알림 모달 열기
+  const openNotificationModal = () => {
+    setIsNotificationModalOpen(true);
+    setIsChartModalOpen(false);  // 차트 모달 닫기
+  };
+
+  // 차트 모달 열기
+  const openChartModal = () => {
+    setIsChartModalOpen(true);
+    setIsNotificationModalOpen(false);  // 알림 모달 닫기
+  };
+
+  // toggleRobot 함수 수정
   const toggleRobot = () => {
     if (startPublisher) {
       const message = new ROSLIB.Message({
@@ -265,8 +317,15 @@ const Main = React.memo(() => {
       console.log(message);
       console.log(`${topic_context.topicButton ? 'Start' : 'Stop'} message published`);
 
-      topic_context.setTopicButton(!topic_context.topicButton)
+      topic_context.setTopicButton(!topic_context.topicButton);
       startPublisher.publish(message);
+
+      // 로봇 상태 변경에 따른 알림 추가
+      addNotification({
+        severity: topic_context.topicButton ? 'info' : 'warning',
+        title: topic_context.topicButton ? '로봇 작동 시작' : '로봇 작동 중지',
+        message: topic_context.topicButton ? '로봇이 작동을 시작했습니다.' : '로봇이 작동을 멈췄습니다.'
+      });
     } else {
       console.log('Start publisher not ready');
     }
@@ -340,24 +399,6 @@ const Main = React.memo(() => {
     setUpdateFlag(false)
   }, [sensorData])
 
-  // 모달을 여는 함수
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  // 모달을 닫는 함수
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSnackbarOpen(true);
-  };
-  
-  const handleCloseSnackbar = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setSnackbarOpen(false);
-  };
-
   // 어제의 온습도 
   useEffect(() => {
     const { avg_temperature, avg_humidity } = yesterdayData
@@ -413,20 +454,20 @@ const Main = React.memo(() => {
     return <div>Loading...</div>;
   }
 
-  const getWeatherStatusMessage = (temperature, humidity) => {
-    if (temperature >= 20 && temperature <= 25 && humidity >= 40 && humidity <= 60) {
-      return { message: "적정 온습도입니다.", severity: "success" };
-    } else if (temperature < 20) {
-      return { message: "온도가 낮습니다. 난방이 필요합니다.", severity: "warning" };
-    } else if (temperature > 25) {
-      return { message: "온도가 높습니다. 환기가 필요합니다.", severity: "warning" };
-    } else if (humidity < 40) {
-      return { message: "습도가 낮습니다. 가습이 필요합니다.", severity: "warning" };
-    } else if (humidity > 60) {
-      return { message: "습도가 높습니다. 환기가 필요합니다.", severity: "warning" };
-    }
-    return { message: "온습도를 확인해주세요.", severity: "info" };
-  };
+  // const getWeatherStatusMessage = (temperature, humidity) => {
+  //   if (temperature >= 20 && temperature <= 25 && humidity >= 40 && humidity <= 60) {
+  //     return { message: "적정 온습도입니다.", severity: "success" };
+  //   } else if (temperature < 20) {
+  //     return { message: "온도가 낮습니다. 난방이 필요합니다.", severity: "warning" };
+  //   } else if (temperature > 25) {
+  //     return { message: "온도가 높습니다. 환기가 필요합니다.", severity: "warning" };
+  //   } else if (humidity < 40) {
+  //     return { message: "습도가 낮습니다. 가습이 필요합니다.", severity: "warning" };
+  //   } else if (humidity > 60) {
+  //     return { message: "습도가 높습니다. 환기가 필요합니다.", severity: "warning" };
+  //   }
+  //   return { message: "온습도를 확인해주세요.", severity: "info" };
+  // };
 
   const getChangeIndicator = (change) => {
     if (change > 0) {
@@ -440,7 +481,7 @@ const Main = React.memo(() => {
 
   const getTemperatureColor = (temp) => {
     if (temp < 10) return '#3f51b5'; // 파랑 (춥다)
-    if (temp < 20) return '#4caf50'; // 초록 (서늘하다)
+    if (temp < 20) return '#4caf50'; // 초록 (적정)
     if (temp < 30) return '#ff9800'; // 주황 (따뜻하다)
     return '#f44336'; // 빨강 (덥다)
   };
@@ -450,6 +491,20 @@ const Main = React.memo(() => {
     if (humidity < 50) return '#ff9800'; // 주황 (약간 건조)
     if (humidity < 70) return '#4caf50'; // 초록 (적정)
     return '#3f51b5'; // 파랑 (습함)
+  };
+
+  const getRecommendedAction = (temperature, humidity) => {
+    if (temperature < 20) {
+      return "난방 시설을 가동하여 온도를 높이세요.";
+    } else if (temperature > 25) {
+      return "환기를 하거나 냉방 시설을 가동하여 온도를 낮추세요.";
+    } else if (humidity < 40) {
+      return "가습기를 사용하거나 물을 뿌려 습도를 높이세요.";
+    } else if (humidity > 60) {
+      return "제습기를 사용하거나 환기를 통해 습도를 낮추세요.";
+    } else {
+      return "현재 환경 조건이 적절합니다. 유지하세요.";
+    }
   };
 
   return (
@@ -475,10 +530,10 @@ const Main = React.memo(() => {
                       현재 온습도
                     </CardTitle>
                     
-                    {/* 온도 게이지: 동적 색상과 선형 진행 막대를 사용하여 온도를 시각화 */}
+                    {/* 온도 게이지 */}
                     <GaugeContainer elevation={3}>
                       <DeviceThermostatIcon color="error" />
-                      <GaugeLabel variant="body1">온도: {sensorData.temperature}°C</GaugeLabel>
+                      <GaugeLabel variant="body1">&nbsp;{sensorData.temperature}°C</GaugeLabel>
                       <Box sx={{ width: '50%' }}>
                         <LinearProgress
                           variant="determinate"
@@ -493,12 +548,15 @@ const Main = React.memo(() => {
                           }}
                         />
                       </Box>
+                      <Typography variant="caption" sx={{ ml: 1 }}>
+                        {getChangeIndicator(sensorData.temperature - yesterdayData.avg_temperature)}
+                      </Typography>
                     </GaugeContainer>
 
-                    {/* 습도 게이지: 동적 색상과 선형 진행 막대를 사용하여 습도를 시각화 */}
+                    {/* 습도 게이지 */}
                     <GaugeContainer elevation={3}>
-                      <OpacityIcon color="primary" />
-                      <GaugeLabel variant="body1">습도: {sensorData.humidity}%</GaugeLabel>
+                      <OpacityIcon sx={{ mr: 1, color: 'info.main' }} />
+                      <GaugeLabel variant="body1">{sensorData.humidity}%</GaugeLabel>
                       <Box sx={{ width: '50%' }}>
                         <LinearProgress
                           variant="determinate"
@@ -513,22 +571,77 @@ const Main = React.memo(() => {
                           }}
                         />
                       </Box>
+                      <Typography variant="caption" sx={{ ml: 1 }}>
+                        {getChangeIndicator(sensorData.humidity - yesterdayData.avg_humidity)}
+                      </Typography>
                     </GaugeContainer>
 
-                    {/* 날씨 상태 메시지: 온습도 상태에 따라 다른 메시지와 심각도로 Alert를 표시 */}
-                    <StatusAlert 
+                    {/* 날씨 상태 메시지 */}
+                    {/* <StatusAlert 
                       severity={getWeatherStatusMessage(sensorData.temperature, sensorData.humidity).severity}
                       icon={<WarningIcon />}
                     >
                       {getWeatherStatusMessage(sensorData.temperature, sensorData.humidity).message}
-                    </StatusAlert>
+                    </StatusAlert> */}
+
+                    {/* 온습도 변화 추이 */}
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>온습도 변화 추이</Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TrendingUpIcon sx={{ mr: 1, color: 'red' }} />
+                            온도: {getChangeIndicator(sensorData.temperature - yesterdayData.avg_temperature)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TrendingUpIcon sx={{ mr: 1, color: 'blue' }} />
+                            습도: {getChangeIndicator(sensorData.humidity - yesterdayData.avg_humidity)}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Box>
+
+                    {/* 최적 환경 조건 */}
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>최적 환경 조건</Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                            <DeviceThermostatIcon sx={{ mr: 1, color: 'error.main' }} />
+                            20°C ~ 25°C
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                            <OpacityIcon sx={{ mr: 1, color: 'info.main' }} />
+                            40% ~ 60%
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Box>
+
+                    {/* 추천 조치 */}
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>추천 조치</Typography>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                        <RecommendIcon sx={{ mr: 1, color: 'success.main' }} />
+                        {getRecommendedAction(sensorData.temperature, sensorData.humidity)}
+                      </Typography>
+                    </Box>
+
+                    {/* 최근 업데이트 시간 */}
+                    <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 2 }}>
+                      최근 업데이트: {new Date(sensorData.timestamp).toLocaleString()}
+                    </Typography>
                   </StyledCardContent>
                 </StyledCard>
               </Grid>
 
               {/* 전날 평균 온습도 카드 */}
               <Grid item xs={12} md={8}>
-                <StyledCard hoverable onClick={handleOpenModal}>
+                <StyledCard hoverable onClick={openChartModal}>
                   <StyledCardContent>
                     <CardTitle variant="h5">
                       <InsertChartIcon sx={{ mr: 1 }} />
@@ -560,20 +673,31 @@ const Main = React.memo(() => {
                       Robot Condition
                     </CardTitle>
                     
-                    {/* 로봇 상태 표시: Chip 컴포넌트를 사용하여 현재 상태를 시각적으로 표현 */}
+                    {/* 로봇 상태 표시 */}
                     <Box display="flex" alignItems="center" mb={2}>
-                      <Typography variant="body1" sx={{ mr: 1, minWidth: '60px' }}>상태:</Typography>
+                      <Tooltip title="로봇 상태">
+                        {topic_context.topicButton ? (
+                          <StopIcon color="error" sx={{ fontSize: 30, mr: 1 }} />
+                        ) : (
+                          <PlayArrowIcon color="success" sx={{ fontSize: 30, mr: 1 }} />
+                        )}
+                      </Tooltip>
                       <Chip 
-                        icon={robotStatus === 'running' ? <DirectionsRunIcon /> : <ModeStandbyIcon />}
-                        label={robotStatus === 'running' ? "작동 중" : "대기 중"}
-                        color={robotStatus === 'running' ? "success" : "default"}
-                        sx={{ width: '100%' }}
+                        icon={topic_context.topicButton ? <ModeStandbyIcon /> : <DirectionsRunIcon />}
+                        label={topic_context.topicButton ? "대기 중" : "작동 중"}
+                        color={topic_context.topicButton ? "default" : "success"}
+                        sx={{ width: '40%', height: '32px', '& .MuiChip-label': { fontSize: '0.9rem' } }}
                       />
                     </Box>
                     
-                    {/* 배터리 상태 표시: LinearProgress를 사용하여 배터리 레벨을 시각화하고 아이콘으로 보완 */}
+                    {/* 배터리 상태 표시 */}
                     <Box display="flex" alignItems="center" mb={2}>
-                      <Typography variant="body1" sx={{ mr: 1, minWidth: '60px' }}>배터리:</Typography>
+                      <Tooltip title="배터리 상태">
+                        <BatteryChargingFullIcon sx={{ fontSize: 30, mr: 1, color: 
+                          robotBattery === 'Battery_High' ? '#4caf50' : 
+                          robotBattery === 'Battery_Medium' ? '#ff9800' : '#f44336'
+                        }} />
+                      </Tooltip>
                       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         <LinearProgress
                           variant="determinate"
@@ -589,23 +713,21 @@ const Main = React.memo(() => {
                             },
                           }}
                         />
-                        <Typography variant="body2" sx={{ ml: 1, minWidth: '50px' }}>
+                        <Typography variant="body2" sx={{ ml: 1, minWidth: '50px', fontWeight: 'bold' }}>
                           {robotBattery === 'Battery_High' ? '높음' : 
                            robotBattery === 'Battery_Medium' ? '중간' : '낮음'}
                         </Typography>
-                        {robotBattery === 'Battery_High' && <BatteryFullIcon color="success" sx={{ ml: 1 }} />}
-                        {robotBattery === 'Battery_Medium' && <Battery50Icon color="warning" sx={{ ml: 1 }} />}
-                        {robotBattery === 'Battery_Low' && <Battery0BarIcon color="error" sx={{ ml: 1 }} />}
                       </Box>
                     </Box>
                     
-                    {/* 로봇 제어 버튼: 상태에 따라 색상과 아이콘이 변경되는 버튼 */}
+                    {/* 로봇 제어 버튼 */}
                     <Button
                       variant="contained"
                       onClick={toggleRobot}
                       color={!topic_context.topicButton ? "error" : "success"}
                       fullWidth
-                      startIcon={!topic_context.topicButton ? <ModeStandbyIcon /> : <DirectionsRunIcon />}
+                      startIcon={!topic_context.topicButton ? <DirectionsRunIcon /> : <ModeStandbyIcon/>}
+                      sx={{ mt: 2, height: '40px', fontSize: '1rem' }}
                     >
                       {!topic_context.topicButton ? '로봇 정지' : '로봇 시작'}
                     </Button>
@@ -615,17 +737,30 @@ const Main = React.memo(() => {
 
               {/* 관리 페이지 카드 */}
               <Grid item xs={12} md={4}>
-                <StyledCard hoverable> 
-                  <CardActionArea component={Link} to="/manage" sx={{ height: '100%', transition: 'all 0.3s' }}>
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                        <SportsEsportsIcon sx={{ mr: 1 }} />
-                        관리 페이지
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                <StyledCard hoverable>
+                  <CardActionArea component={Link} to="/manage" sx={{ height: '100%' }}>
+                    <StyledCardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <SportsEsportsIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                          관리 페이지
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         실시간 객체 탐지 영상 확인
                       </Typography>
-                    </CardContent>
+                      {/* 기능 목록 추가 */}
+                      <Box>
+                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <CheckCircleOutlineIcon sx={{ mr: 1, color: 'success.main', fontSize: 20 }} />
+                          로봇 상태 모니터링
+                        </Typography>
+                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                          <CheckCircleOutlineIcon sx={{ mr: 1, color: 'success.main', fontSize: 20 }} />
+                          실시간 제어 및 설정
+                        </Typography>
+                      </Box>
+                    </StyledCardContent>
                   </CardActionArea>
                 </StyledCard>
               </Grid>
@@ -633,25 +768,29 @@ const Main = React.memo(() => {
               {/* 객체 확인 페이지 카드 */}
               <Grid item xs={12} md={4}>
                 <StyledCard hoverable>
-                  <CardActionArea 
-                    component={Link} 
-                    to="/obj" 
-                    sx={{ 
-                      height: '100%', 
-                      backgroundImage: 'url("/path/to/object-detection-image.jpg")',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
-                  >
-                    <CardContent sx={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
-                      <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                        <ViewInArIcon sx={{ mr: 1 }} />
-                        객체 확인 페이지
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                  <CardActionArea component={Link} to="/obj" sx={{ height: '100%' }}>
+                    <StyledCardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <ViewInArIcon sx={{ fontSize: 40, color: 'secondary.main', mr: 2 }} />
+                        <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+                          객체 확인 페이지
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         실시간 객체 탐지 결과 확인
                       </Typography>
-                    </CardContent>
+                      {/* 기능 목록 추가 */}
+                      <Box>
+                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <CheckCircleOutlineIcon sx={{ mr: 1, color: 'success.main', fontSize: 20 }} />
+                          탐지된 객체 목록 확인
+                        </Typography>
+                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                          <CheckCircleOutlineIcon sx={{ mr: 1, color: 'success.main', fontSize: 20 }} />
+                          객체 분석 및 통계
+                        </Typography>
+                      </Box>
+                    </StyledCardContent>
                   </CardActionArea>
                 </StyledCard>
               </Grid>
@@ -659,35 +798,20 @@ const Main = React.memo(() => {
           </Box>
         </CardContainer>
       </Content>
-      <ChartModal 
-        open={isModalOpen} 
-        onClose={handleCloseModal}
-        title="전날 온습도 상세 정보"
-      >
-      </ChartModal>
+
+      {/* 알림 모달 */}
+      <NotificationModal
+        open={isNotificationModalOpen}
+        handleClose={() => setIsNotificationModalOpen(false)}
+        notifications={notifications}
+        removeNotification={removeNotification}
+        removeAllNotifications={removeAllNotifications}
+      />
+
+      <ROSAlarm onNotification={addNotification} />
     </MainContainer>
   );
 });
 
 export default Main;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

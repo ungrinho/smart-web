@@ -37,6 +37,8 @@ const NotificationModal = ({ open, handleClose, notifications, removeNotificatio
       onClose={handleClose}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
+      disableScrollLock={true} // 이 속성을 추가하여 페이지 스크롤을 허용합니다
+      keepMounted // 이 속성을 추가하여 모달이 닫혀있을 때도 DOM에 유지되도록 합니다
     >
       <Box sx={getOpenStyle(open)}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

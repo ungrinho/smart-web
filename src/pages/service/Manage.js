@@ -131,7 +131,7 @@ function Manage(){
 
         const motorServiceInstance = new ROSLIB.Service({
             ros: ros,
-            name: '/motor',
+            name: '/handling',
             serviceType: '/jetbotmini_msgs/Motor'
         });
 
@@ -141,11 +141,12 @@ function Manage(){
             messageType: 'std_msgs/String'
         });
 
-        const statesTopic = new ROSLIB.Topic({
-            ros: ros,
-            name: './states',
-            messageType: 'std_msgs/states'
-        });
+        // // states 바꿀 때 쓰려는 topic
+        // const statesTopic = new ROSLIB.Topic({
+        //     ros: ros,
+        //     name: './states',
+        //     messageType: 'std_msgs/states'
+        // });
 
         setRos(ros);
         setMotorService(motorServiceInstance);
@@ -162,6 +163,10 @@ function Manage(){
         setAlignment(newAlignment);
     };
 
+    const handleStates = () => {
+        console.log()
+    }
+
     const handleControl = (direction) => {
         if (!motorService) return;
 
@@ -172,27 +177,27 @@ function Manage(){
             case 'forward':
                 rightspeed = 0.5;
                 leftspeed = 0.5;
-                console.log('forward')
+                console.log('forward');
                 break;
             case 'backward':
                 rightspeed = -0.5;
                 leftspeed = -0.5;
-                console.log('backward')
+                console.log('backward');
                 break;
             case 'left':
                 rightspeed = -0.5;
                 leftspeed = 0.5;
-                console.log('left')
+                console.log('left');
                 break;
             case 'right':
                 rightspeed = 0.5;
                 leftspeed = -0.5;
-                console.log('right')
+                console.log('right');
                 break;
             case 'stop':
                 rightspeed = 0.0;
                 leftspeed = 0.0;
-                console.log('stop')
+                console.log('stop');
                 break;
             default:
                 break;
@@ -207,6 +212,41 @@ function Manage(){
             console.log('Result for service call on ', direction, ': ', result);
         });
     };
+
+    // 키보드 이벤트 리스너 추가
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            switch (event.key) {
+                case 'w':
+                case 'W':
+                    handleControl('forward');
+                    break;
+                case 'a':
+                case 'A':
+                    handleControl('left');
+                    break;
+                case 's':
+                case 'S':
+                    handleControl('backward');
+                    break;
+                case 'd':
+                case 'D':
+                    handleControl('right');
+                    break;
+                case ' ':
+                    handleControl('stop');
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [motorService]);
 
     return(
         <MainContainer>
