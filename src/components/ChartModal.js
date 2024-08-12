@@ -9,7 +9,6 @@ import DataChart from './DataChart';
 import Button from '@mui/material/Button';
 import DialogActions from '@mui/material/DialogActions';
 
-
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
     padding: theme.spacing(2),
@@ -19,7 +18,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export default function ChartModal({ open, onClose, title, children }) {
+export default function ChartModal({ open, onClose, title, data }) {
   return (
     <BootstrapDialog
       onClose={onClose}
@@ -44,13 +43,9 @@ export default function ChartModal({ open, onClose, title, children }) {
         <CloseIcon />
       </IconButton>
       <DialogContent dividers>
-        <DataChart />
+        <DataChart data={data} />
       </DialogContent>
-      {/* <DialogActions>
-        <Button autoFocus onClick={onClose}>
-          닫기
-        </Button>
-      </DialogActions> */}
+
     </BootstrapDialog>
   );
 }

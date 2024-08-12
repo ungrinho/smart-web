@@ -43,7 +43,7 @@ const customTheme = createTheme({
   },
 });
 
-const drawerWidth = 240;  
+const drawerWidth = 210;  
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -217,7 +217,18 @@ export default function MiniDrawer({ children }) {
             </IconButton>
           </Toolbar>
         </AppBar>
-        <StyledDrawer variant="permanent" open={open}>
+        <MuiDrawer
+          sx={{
+            transition: 'width 0.1s 0s linear',
+            width:  open ? drawerWidth: 0,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width:  drawerWidth,
+              boxSizing: 'border-box',
+            },
+          }}
+          variant="persistent" open={open}
+        >
           <DrawerHeader>
             <IconButton onClick={handleDrawerClose}>
               {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -274,7 +285,7 @@ export default function MiniDrawer({ children }) {
               </ListItemButton>
             </ListItem>
           </List>
-        </StyledDrawer>
+        </MuiDrawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: 'background.default' }}>
           {children}
         </Box>

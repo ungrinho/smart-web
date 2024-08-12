@@ -3,7 +3,7 @@ import axios from 'axios';
 import { auth } from '../../config/firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Snackbar, Alert, LinearProgress, CircularProgress, Tooltip, Paper, Chip, Button, Badge, IconButton } from '@mui/material';
+import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Alert, LinearProgress, CircularProgress, Tooltip, Paper, Chip, Button, Badge, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { AuthContext } from '../../contexts/AuthContext';
 import { topicButtonContext } from '../../App'
@@ -32,6 +32,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import RecommendIcon from '@mui/icons-material/Recommend';
+import { useResizeDetector } from 'react-resize-detector';
 
 
 
@@ -129,7 +130,7 @@ const Main = React.memo(() => {
   const [farmName, setFarmName] = useState('');
   const [robotStatus, setRobotStatus] = useState('');
   const [robotBattery, setRobotBattery] = useState('');
-  const [sensorData, setSensorData] = useState({ temperature: null, humidity: null });
+  const [sensorData, setSensorData] = useState({ temperature: null, humidity: null, timestamp: null });
   const [sentSensorData, setSentSensorData] = useState({ temperature: null, humidity: null });
   const [haveToUpdate, setUpdateFlag] = useState(true);
   const [error, setError] = useState(null);
@@ -145,6 +146,11 @@ const Main = React.memo(() => {
   const [startPublisher, setStartPublisher] = useState(null);
   const [yesterdayHourlyData, setYesterdayHourlyData] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { width, height, ref } = useResizeDetector({
+    handleHeight: true,
+    refreshMode: 'debounce',
+    refreshRate: 300,
+  });
 
   console.log("my_context", my_context.user)
   console.log("topic_context", topic_context)
@@ -359,7 +365,8 @@ const Main = React.memo(() => {
         if (!isNaN(temperature) && !isNaN(humidity)) {
           setSentSensorData({ 
             temperature: temperature.toFixed(1), 
-            humidity: humidity.toFixed(1) 
+            humidity: humidity.toFixed(1),
+            timestamp: new Date().toISOString() // 현재 시간을 ISO 문자열로 저장
           });
         } else {
           console.error('Invalid number in data:', data);
@@ -633,7 +640,7 @@ const Main = React.memo(() => {
 
                     {/* 최근 업데이트 시간 */}
                     <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 2 }}>
-                      최근 업데이트: {new Date(sensorData.timestamp).toLocaleString()}
+                      최근 업데이트: {sensorData.timestamp ? new Date(sensorData.timestamp).toLocaleString() : '업데이트 정보 없음'}
                     </Typography>
                   </StyledCardContent>
                 </StyledCard>
@@ -641,24 +648,26 @@ const Main = React.memo(() => {
 
               {/* 전날 평균 온습도 카드 */}
               <Grid item xs={12} md={8}>
-                <StyledCard hoverable onClick={openChartModal}>
+                <StyledCard hoverable onClick={() => setIsChartModalOpen(true)}>
                   <StyledCardContent>
                     <CardTitle variant="h5">
                       <InsertChartIcon sx={{ mr: 1 }} />
                       전날 평균 온습도
                     </CardTitle>
-                    <Box sx={{ height: 'calc(100% - 40px)', minHeight: '300px' }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={yesterdayHourlyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="time" />
-                          <YAxis yAxisId="left" />
-                          <YAxis yAxisId="right" orientation="right" />
-                          <Tooltip />
-                          <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
-                          <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#82ca9d" name="습도" />
-                        </LineChart>
-                      </ResponsiveContainer>
+                    <Box ref={ref} sx={{ height: 'calc(100% - 40px)', minHeight: '300px' }}>
+                      {width && height && (
+                        <ResponsiveContainer width={width} height={height}>
+                          <LineChart data={yesterdayHourlyData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="time" />
+                            <YAxis yAxisId="left" />
+                            <YAxis yAxisId="right" orientation="right" />
+                            <Tooltip />
+                            <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
+                            <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#82ca9d" name="습도" />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
                     </Box>
                   </StyledCardContent>
                 </StyledCard>
@@ -799,6 +808,14 @@ const Main = React.memo(() => {
         </CardContainer>
       </Content>
 
+      {/* ChartModal 컴포넌트 */}
+      <ChartModal
+        open={isChartModalOpen}
+        onClose={() => setIsChartModalOpen(false)}
+        title="전날 평균 온습도 상세 차트"
+        data={yesterdayHourlyData}
+      />
+
       {/* 알림 모달 */}
       <NotificationModal
         open={isNotificationModalOpen}
@@ -812,6 +829,7 @@ const Main = React.memo(() => {
     </MainContainer>
   );
 });
+
 
 export default Main;
 

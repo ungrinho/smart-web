@@ -1,4 +1,4 @@
-import React, { useState , createContext, useContext } from 'react';
+import React, { useState , createContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import './App.css';
@@ -9,6 +9,8 @@ import Drawer from './components/Drawer';
 import Object from './pages/service/Object';
 import CS from './pages/service/CS';
 import Manage from './pages/service/Manage';
+import ScrollToTop from './components/ScrollToTop';
+
 
 export const topicButtonContext = createContext();
 
@@ -20,40 +22,37 @@ const AppContent = () => {
 
   return (
     <>
-    <topicButtonContext.Provider value={{topicButton, setTopicButton}}>
-      {shouldRenderDrawer ? (
-        <Drawer>
+      <ScrollToTop />
+      <topicButtonContext.Provider value={{topicButton, setTopicButton}}>
+        {shouldRenderDrawer ? (
+          <Drawer>
+            <Routes>
+              <Route path="/main" element={<Main />} />
+              <Route path="/obj" element={<Object />} />
+              <Route path="/CS" element={<CS />} />
+              <Route path="/manage" element={<Manage />} />
+              {/* 다른 Drawer가 필요한 라우트들 */}
+            </Routes>
+          </Drawer>
+        ) : (
           <Routes>
-            <Route path="/main" element={<Main />} />
-            <Route path="/obj" element={<Object />} />
-            <Route path="/CS" element={<CS />} />
-            <Route path="/manage" element={<Manage />} />
-            {/* 다른 Drawer가 필요한 라우트들 */}
+            <Route path="/" element={<Navigate to="/signin" replace />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
           </Routes>
-        </Drawer>
-      ) : (
-        <Routes>
-          <Route path="/" element={<Navigate to="/signin" replace />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-        </Routes>
-      )}
+        )}
       </topicButtonContext.Provider>
     </>
   );
 };
 
-
-
 const App = () => {
   return (
-
     <AuthProvider>
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
     </AuthProvider>
-
   );
 };
 

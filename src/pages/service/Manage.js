@@ -106,7 +106,7 @@ function Manage(){
         setCurrentImage(
             alignment === 'auto' ?
             'http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw' :
-            'http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw'
+            'http://192.168.0.13:8080/stream?topic=/usb_cam2/image_raw'
         )
         setControlPanel(alignment === 'control')
     }, [alignment])
@@ -157,6 +157,7 @@ function Manage(){
             }
         };
     }, []);
+
 
     const handleChange = (event, newAlignment) => {
         console.log(newAlignment)
@@ -260,9 +261,9 @@ function Manage(){
             >
                 <StyledTab value="auto" label="Auto" icon={<AutorenewIcon />} style={{ width: '200px', fontWeight: 'bold'}} />
                 <StyledTab value="control" label="Hands-on" icon={<SportsEsportsIcon />} style={{ width: '200px', marginRight: 'auto', fontWeight: 'bold'}} />
-                {alignment === 'control' && (
+                {/* {alignment === 'control' && (
                     <StyledButton>운행종료</StyledButton>
-                )}
+                )} */}
             </StyledTabs>
             <br />
             <CardContainer>

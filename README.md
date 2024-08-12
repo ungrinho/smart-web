@@ -1,3 +1,4 @@
+#######   npm install react-resize-detector ##########설치해야함
 #######   npm install @emailjs/browser --force  #########
 #######   npm install chart.js react-chartjs-2  #########
 
