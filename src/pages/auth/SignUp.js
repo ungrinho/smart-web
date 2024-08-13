@@ -92,14 +92,14 @@ const SignUp = () => {
       });
 
       if (response.ok) {
-        console.log('User registered successfully');
+        // console.log('User registered successfully');
         navigate('/main');
       } else {
-        console.error('Failed to register user');
+        // console.error('Failed to register user');
         setRegisterError('회원가입에 실패하였습니다. 다시 시도해주세요.');
       }
     } catch (error) {
-      console.error('Error registering user:', error);
+      // console.error('Error registering user:', error);
       setRegisterError('회원가입에 실패하였습니다. 다시 시도해주세요.');
     }
   };

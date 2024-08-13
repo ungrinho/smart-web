@@ -46,7 +46,7 @@ const LoginPage = React.memo(() => {
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    console.log("혹시 로그인한 사람 있음?", user);
+    // console.log("혹시 로그인한 사람 있음?", user);
   }, [user]);
 
   const validateEmail = (email) => {
@@ -75,7 +75,7 @@ const LoginPage = React.memo(() => {
         navigate("/main");
       })
       .catch((error) => {
-        console.error('Error signing in:', error);
+        // console.error('Error signing in:', error);
         if (error.code === 'auth/wrong-password') {
           setPasswordError('올바른 비밀번호가 아닙니다.');
         } else if (error.code === 'auth/user-not-found') {
@@ -98,7 +98,7 @@ const LoginPage = React.memo(() => {
       await signInWithPopup(auth, provider);
       navigate('/main');
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      // console.error('Error signing in with Google:', error);
       setError('Google 로그인 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);

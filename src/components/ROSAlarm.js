@@ -14,17 +14,17 @@ function ROSAlarm({ onNotification }) {
     const ROSConnect = () => {
       try {
         ros.on("connection", () => {
-          console.log("Connected to websocket server.");
+          // console.log("Connected to websocket server.");
           subscribeToTopics(ros);
         });
         ros.on("error", (error) => {
-          console.log("Error connecting to websocket server:", error);
+          // console.log("Error connecting to websocket server:", error);
         });
         ros.on("close", () => {
-          console.log("Connection to websocket server closed.");
+          // console.log("Connection to websocket server closed.");
         });
       } catch (error) {
-        console.log("Failed to construct websocket. The URL is invalid:", error);
+        // console.log("Failed to construct websocket. The URL is invalid:", error);
       }
     };
 
@@ -36,7 +36,7 @@ function ROSAlarm({ onNotification }) {
       });
 
       statesListener.subscribe((message) => {
-        console.log("Received message:", message.data);
+        // console.log("Received message:", message.data);
         const topics = message.data.split(",");
         handleBatteryStatus(topics[0]);
         handleDriveStatus(topics[1]);

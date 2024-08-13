@@ -55,10 +55,6 @@ const StyledAccordion = styled(Accordion)(({ theme }) => ({
   },
 }));
 
-const StyledDivider = styled(Divider)(({ theme }) => ({
-  margin: theme.spacing(2, 0),
-}));
-
 const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
   alignItems: 'flex-start',
   '& .MuiFormControlLabel-label': {
@@ -123,7 +119,7 @@ export const CS = () => {
     emailjs
       .sendForm('service_h7d6kfv', 'template_en6qwf9', form.current, 'k8qlCKerGZ-zGuKKZ')
       .then((result) => {
-        console.log(result.text);
+        // console.log(result.text);
         setSnackbar({ open: true, message: '문의가 성공적으로 전송되었습니다.', severity: 'success' });
         form.current.reset();
         setTitle('');
@@ -132,7 +128,7 @@ export const CS = () => {
         setName('');
         setChecked(false);
       }, (error) => {
-        console.log(error.text);
+        // console.log(error.text);
         setSnackbar({ open: true, message: '문의 전송에 실패했습니다. 다시 시도해 주세요.', severity: 'error' });
       });
   };
@@ -146,6 +142,9 @@ export const CS = () => {
 
   return (
     <StyledContainer maxWidth="lg">
+      <Typography variant="h4" component="h1" align="center" sx={{ mt: 10, mb: 4, fontWeight: 'bold' }}>
+        고객 지원 센터
+      </Typography>
       <Grid container spacing={4}>
         {/* 자주 묻는 질문 섹션 */}
         <Grid item xs={12} md={5}>

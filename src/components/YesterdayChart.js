@@ -43,7 +43,7 @@ function YesterdayChart() {
     })
     .then((response) => {
       const data = response.data[0];
-      console.log(data)
+      // console.log(data)
       setDailySummary({
         avg_temperature: data.avgTemperature.toFixed(1),
         avg_humidity: data.avgHumidity.toFixed(1),
@@ -63,7 +63,7 @@ function YesterdayChart() {
       });
     })
     .catch((error) => {
-      console.error("Error fetching data:", error);
+      // console.error("Error fetching data:", error);
     });
   }, []);
 
@@ -91,7 +91,7 @@ function YesterdayChart() {
     });
   };
 
-  const chartRef = useRef(null);
+  // const chartRef = useRef(null);
 
   const options = {
     responsive: true,
@@ -117,7 +117,7 @@ function YesterdayChart() {
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
-      <Bar options={options} data={chartData} ref={chartRef} />
+      <Bar options={options} data={chartData}/>
     </Box>
   );
 }

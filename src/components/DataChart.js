@@ -49,7 +49,7 @@ function DataChart() {
     })
     .then((response) => {
       const data = response.data[0];
-      console.log(data)
+      // console.log(data)
       setDailySummary({
         avg_temperature: data.avgTemperature.toFixed(1),
         avg_humidity: data.avgHumidity.toFixed(1),
@@ -69,7 +69,7 @@ function DataChart() {
       });
     })
     .catch((error) => {
-      console.error("Error fetching data:", error);
+      // console.error("Error fetching data:", error);
     });
   }, [selectedDate]);
 

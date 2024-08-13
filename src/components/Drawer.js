@@ -153,7 +153,7 @@ export default function MiniDrawer({ children }) {
       localStorage.removeItem("uid");  // Remove uid from local storage
       navigate('/', { replace: true });  // Navigate to home after logout and replace history
     } catch (error) {
-      console.error("Error during logout:", error);  // Log error if occurs during logout
+      // console.error("Error during logout:", error);  // Log error if occurs during logout
     }
   };
 
@@ -161,10 +161,10 @@ export default function MiniDrawer({ children }) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        console.log("Current user's uid:", currentUser.uid);
+        // console.log("Current user's uid:", currentUser.uid);
         localStorage.setItem("uid", currentUser.uid);  // Store user uid in local storage
       } else {
-        console.log("No logged in user!");
+        // console.log("No logged in user!");
         localStorage.removeItem("uid");
         navigate('/', { replace: true });  // Navigate to home if no user and replace history
       }
@@ -176,9 +176,9 @@ export default function MiniDrawer({ children }) {
   // 일반 메뉴 아이템
   const menuItems = [
     { text: '홈', icon: <HomeIcon />, path: '/main' },
-    { text: '탐지내역', icon: <ViewInArIcon />, path: '/obj' },
-    { text: '모니터링', icon: <SportsEsportsIcon />, path: '/manage' },
-    { text: '고객문의', icon: <QuestionAnswerIcon />, path: '/cs' },
+    { text: '객체 확인 페이지', icon: <ViewInArIcon />, path: '/obj' },
+    { text: '관리페이지', icon: <SportsEsportsIcon />, path: '/manage' },
+    { text: '고객 문의', icon: <QuestionAnswerIcon />, path: '/cs' },
   ];
 
   // Handler to open modal

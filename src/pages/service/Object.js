@@ -150,6 +150,11 @@ function Row(props) {
                                         <BorderedTableCell>Tree Number</BorderedTableCell>
                                         <BorderedTableCell>Ripeness</BorderedTableCell>
                                         <BorderedTableCell>NO.</BorderedTableCell>
+                                        {category === 'HalfRipe' && (
+                                          <>
+                                            <BorderedTableCell>Prediction</BorderedTableCell>
+                                          </>
+                                        )}
                                       </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -160,6 +165,11 @@ function Row(props) {
                                             <BorderedTableCell>{treeNumber}</BorderedTableCell>
                                             <BorderedTableCell>{ripeness}</BorderedTableCell>
                                             <BorderedTableCell>{count}</BorderedTableCell>
+                                            {category === 'HalfRipe' && (
+                                              <>
+                                                <BorderedTableCell>{image.prediction || '-'}</BorderedTableCell>
+                                              </>
+                                            )}
                                           </StyledTableRow>
                                         );
                                       })}
@@ -197,7 +207,6 @@ function Object() {
       console.log('date:', selectedDate, 'uid:', uid);
       const fetchData = async () => {
         try {
-          // 실제 API 호출
           const response = await axios.get('http://localhost:8080/api/images/metadata', {
             params: {
               date: selectedDate,
@@ -222,10 +231,12 @@ function Object() {
 
     const handleImageClick = async (fileName) => {
       try {
-        const url = await getDownloadURL(ref(storage, fileName));
+        const imageRef = ref(storage, `images/${fileName}`);
+        const url = await getDownloadURL(imageRef);
         setSelectedImage(url);
       } catch (error) {
-        console.error('Error getting download URL:', error);
+        console.error("Error getting image URL:", error);
+        setSelectedImage('');
       }
     };
   

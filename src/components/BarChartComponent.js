@@ -17,18 +17,18 @@ function BarChartComponent() {
                 const response = await axios.get('http://localhost:8080/api/images/metadata/summary', {
                     params: { uid: uid }
                 });
-                console.log('API Response:', response.data);
+                // console.log('API Response:', response.data);
                 const processedData = response.data || [];
                 setWeeklyData(processedData);
             } catch (error) {
-                console.error('weeklyData error:', error);
+                // console.error('weeklyData error:', error);
             }
         };
 
         totalData();
     }, []);
 
-    console.log('Weekly Data:', weeklyData);
+    // console.log('Weekly Data:', weeklyData);
 
     const groupedData = (weeklyData || []).reduce((acc, { date, ripe, unripe, halfripe }) => {
         if (!acc[date]) {
@@ -92,7 +92,7 @@ function BarChartComponent() {
         },
     };
 
-    console.log('Chart Data:', chartData);
+    // console.log('Chart Data:', chartData);
 
     return (
         <Box sx={{ width: '100%', height: '100%' }}>
