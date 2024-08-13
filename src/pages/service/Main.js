@@ -7,9 +7,7 @@ import { Card, CardContent, CardMedia, Typography, CardActionArea, Grid, Box, Al
 import { styled } from '@mui/material/styles';
 import { AuthContext } from '../../contexts/AuthContext';
 import { topicButtonContext } from '../../App'
-import ChartModal from '../../components/ChartModal';
 import ROSLIB from "roslib"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import InsertChartIcon from '@mui/icons-material/InsertChart';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -17,30 +15,21 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import ModeStandbyIcon from '@mui/icons-material/ModeStandby';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import Battery0BarIcon from '@mui/icons-material/Battery0Bar';
-import BatteryFullIcon from '@mui/icons-material/BatteryFull';
-import Battery50Icon from '@mui/icons-material/Battery50';
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import OpacityIcon from '@mui/icons-material/Opacity';
-import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ROSAlarm from '../../components/ROSAlarm';  // ROSAlarm 컴포넌트 import 추가
 import NotificationModal from '../../components/NotificationModal';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import RecommendIcon from '@mui/icons-material/Recommend';
 import { useResizeDetector } from 'react-resize-detector';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip as ChartTooltip, Legend } from 'chart.js';
-import { Bar as ChartBar } from 'react-chartjs-2';
 import YesterdayChart from '../../components/YesterdayChart';
+import ChartModal from '../../components/ChartModal';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend);
-
-
-
 
 const MainContainer = styled('div')({
   display: 'flex',
@@ -85,10 +74,6 @@ const CardTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
 }));
 
-const CardInfo = styled(Typography)({
-  marginBottom: '8px',
-});
-
 const CardContainer = styled('div')(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -97,21 +82,6 @@ const CardContainer = styled('div')(({ theme }) => ({
     gridTemplateColumns: '1fr',
   },
 }));
-
-const ToggleButton = styled('button')(({ isrunning }) => ({ 
-  minWidth: '50%',
-  height: '100%',
-  fontSize: '15px',
-  backgroundColor: isrunning === 'true' ? 'red' : 'green',
-  color: 'white',
-  '&:hover': {
-    backgroundColor: isrunning === 'true' ? '#d32f2f' : '#388e3c',
-  },
-}));
-
-const hoverStyle = {
-  backgroundColor: '#f0f0f0',
-};
 
 const GaugeContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -124,10 +94,6 @@ const GaugeContainer = styled(Paper)(({ theme }) => ({
 const GaugeLabel = styled(Typography)(({ theme }) => ({
   marginLeft: theme.spacing(2),
   flex: 1,
-}));
-
-const StatusAlert = styled(Alert)(({ theme }) => ({
-  marginTop: theme.spacing(2),
 }));
 
 const Main = React.memo(() => {
@@ -149,7 +115,6 @@ const Main = React.memo(() => {
   const [yesterdayData, setYesterdayData] = useState({ avg_temperature: null, avg_humidity: null });
   const [ros, setRos] = useState(null);
   const [startPublisher, setStartPublisher] = useState(null);
-  const [yesterdayHourlyData, setYesterdayHourlyData] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const { width, height, ref } = useResizeDetector({
     handleHeight: true,
@@ -157,6 +122,7 @@ const Main = React.memo(() => {
     refreshRate: 300,
   });
 
+  // 전날 온습도 데이터 get
   const [yesterdayAvg, setYesterdayAvg] = useState({ avg_temperature: null, avg_humidity: null });
 
   useEffect(() => {
@@ -173,25 +139,13 @@ const Main = React.memo(() => {
             avg_humidity: parseFloat(data.avgHumidity).toFixed(1)
           });
         } catch (error) {
-          console.error("Error fetching yesterday's average data:", error);
+          // console.error("Error fetching yesterday's average data:", error);
         }
       }
     };
 
     fetchYesterdayAvg();
   }, []);
-
-  const getChangeIndicator = (current, yesterday) => {
-    if (!current || !yesterday) return <span>데이터 없음</span>;
-    const change = (current - yesterday).toFixed(1);
-    if (change > 0) {
-      return <span style={{ color: 'red' }}>▲{change}</span>;
-    } else if (change < 0) {
-      return <span style={{ color: 'blue' }}>▼{Math.abs(change)}</span>;
-    } else {
-      return <span>변화없음</span>;
-    }
-  };
 
   // 로그인 관련
   useEffect(() => {
@@ -205,24 +159,20 @@ const Main = React.memo(() => {
     });
   }, [])
   
+  // 유저 이름 get
   const fetchFarmName = async (uid) => {
     try {
       const response = await axios.get('http://localhost:8080/api/users/getFarmName', {
         params: { uid }
       });
-      setFarmName(response.data); // Assuming the response contains the name
-      console.log("name set success")
-      console.log(response.data)
+      setFarmName(response.data);
+      // console.log("name set success")
+      // console.log(response.data)
     } catch (error) {
-      console.error("Error fetching farm name:", error);
-      setFarmName("사용자"); // Default name if there's an error
+      // console.error("Error fetching farm name:", error);
+      setFarmName("아무개의 농장");
     }
   };
-  
-  useEffect(() => {
-    sentSensorData.temperature != sensorData.temperature ? setUpdateFlag(true) : setUpdateFlag(false) 
-    sentSensorData.humidity != sensorData.humidity ? setUpdateFlag(true) : setUpdateFlag(false) 
-  }, [sentSensorData])
 
   // ROS 토픽 연결
   useEffect(() => {
@@ -231,16 +181,16 @@ const Main = React.memo(() => {
     });
 
     newRos.on("connection", () => {
-      console.log('웹소켓 서버에 연결되었습니다.');
+      // console.log('웹소켓 서버에 연결되었습니다.');
       setupROSTopics(newRos);
     });
 
     newRos.on("error", (error) => {
-      console.log('웹소켓 서버 연결 오류: ', error);
+      // console.log('웹소켓 서버 연결 오류: ', error);
     });
 
     newRos.on("close", () => {
-      console.log('웹소켓 서버 연결이 닫혔습니다.');
+      // console.log('웹소켓 서버 연결이 닫혔습니다.');
     });
 
     setRos(newRos);
@@ -250,6 +200,7 @@ const Main = React.memo(() => {
     };
   }, []);
 
+  // ROS 토픽 설정
   const setupROSTopics = (ros) => {
     let lastBattery = null;
     let lastStatus = null;
@@ -273,6 +224,7 @@ const Main = React.memo(() => {
       messageType: 'jetbotmini_msgs/Tree'
     });
 
+    // 퍼블리셔
     setStartPublisher(newStartPublisher);
 
     rqDonePublisher.subscribe((message) => {
@@ -282,8 +234,9 @@ const Main = React.memo(() => {
       }
     })
 
+    // ROS 상태 수신 (배터리, 작동중)
     statesListener.subscribe((message) => {
-      console.log("이것이 메시지 :", message.data)
+      // console.log("이것이 메시지 :", message.data)
 
       const topics = message.data.split(",")
       if (topics[0] !== lastBattery) {
@@ -357,8 +310,8 @@ const Main = React.memo(() => {
         data: topic_context.topicButton ? 'start' : 'stop'
       });
 
-      console.log(message);
-      console.log(`${topic_context.topicButton ? 'Start' : 'Stop'} message published`);
+      // console.log(message);
+      // console.log(`${topic_context.topicButton ? 'Start' : 'Stop'} message published`);
 
       topic_context.setTopicButton(!topic_context.topicButton);
       startPublisher.publish(message);
@@ -370,28 +323,28 @@ const Main = React.memo(() => {
         message: topic_context.topicButton ? '로봇이 작동을 시작했습니다.' : '로봇이 작동을 멈췄습니다.'
       });
     } else {
-      console.log('Start publisher not ready');
+      // console.log('Start publisher not ready');
     }
   };
 
-  // arduino 실시간 온습도 수신
+  // 아두이노 실시간 온습도
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8765');
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log('WebSocket Connected');
+      // console.log('WebSocket Connected');
       setError(null);
       reconnectAttempts.current = 0; 
     };
 
     ws.onclose = () => {
-      console.log('WebSocket Disconnected');
+      // console.log('WebSocket Disconnected');
     };
 
     ws.onmessage = (event) => {
       const data = event.data;
-      console.log('Received data from websocket:', data);
+      // console.log('Received data from websocket:', data);
       const tempMatch = data.match(/Temperature:\s*([\d.]+)/);
       const humidityMatch = data.match(/Humidity:\s*([\d.]+)/);
 
@@ -406,10 +359,10 @@ const Main = React.memo(() => {
             timestamp: new Date().toISOString() // 현재 시간을 ISO 문자열로 저장
           });
         } else {
-          console.error('Invalid number in data:', data);
+          // console.error('Invalid number in data:', data);
         }
       } else {
-        console.error('Invalid data format received:', data);
+        // console.error('Invalid data format received:', data);
       }
     };
   }, []);
@@ -431,13 +384,13 @@ const Main = React.memo(() => {
 
   // 온습도 업데이트 될 때 마다 저장
   useEffect(() => {
-    console.log("업데이트 값 :", sensorData)
+    // console.log("업데이트 값 :", sensorData)
     axios.post('http://localhost:8080/api/saveData', {
       ...sensorData
     }).then((retVal) => {
-      console.log("Well Saved!", retVal)
+      // console.log("Well Saved!", retVal)
     }).catch((retVal) => {
-      console.log("Error!", retVal)
+      // console.log("Error!", retVal)
     })
     
     setUpdateFlag(false)
@@ -456,7 +409,20 @@ const Main = React.memo(() => {
     return <div>Loading...</div>;
   }
 
+  // 온습도 변화 추이 계산식
+  const getChangeIndicator = (current, yesterday) => {
+    if (!current || !yesterday) return <span>데이터 없음</span>;
+    const change = (current - yesterday).toFixed(1);
+    if (change > 0) {
+      return <span style={{ color: 'red' }}>▲{change}</span>;
+    } else if (change < 0) {
+      return <span style={{ color: 'blue' }}>▼{Math.abs(change)}</span>;
+    } else {
+      return <span>변화없음</span>;
+    }
+  };
 
+  // 실시간 온습도 게이지 색 설정
   const getTemperatureColor = (temp) => {
     if (temp < 10) return '#3f51b5'; // 파랑 (춥다)
     if (temp < 20) return '#4caf50'; // 초록 (적정)
@@ -471,6 +437,7 @@ const Main = React.memo(() => {
     return '#3f51b5'; // 파랑 (습함)
   };
 
+  // 추천 조치
   const getRecommendedAction = (temperature, humidity) => {
     if (temperature < 20) {
       return "난방 시설을 가동하여 온도를 높이세요.";
@@ -756,8 +723,7 @@ const Main = React.memo(() => {
       <ChartModal
         open={isChartModalOpen}
         onClose={() => setIsChartModalOpen(false)}
-        title="전날 평균 온습도 상세 차트"
-        data={yesterdayHourlyData}
+        title="평균 온습도 조회 (90일)"
       />
 
       {/* 알림 모달 */}

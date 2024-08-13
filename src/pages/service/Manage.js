@@ -72,17 +72,6 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   borderLeft: `1px solid ${theme.palette.divider}`
 }));
 
-// 커스텀 Button 컴포넌트
-const StyledButton = styled(Button)(({ theme }) => ({
-  minWidth: 100,
-  backgroundColor: theme.palette.error.main,
-  color: theme.palette.common.white,
-  '&:hover': {
-    backgroundColor: theme.palette.error.dark,
-  },
-  marginLeft: theme.spacing(2),
-}));
-
 const ImageContainer = styled('div')(({ theme }) => ({
   width: '100%',
   height: '600px',
@@ -104,6 +93,7 @@ function Manage(){
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const topic_context = useContext(topicButtonContext);
 
+    // 영상 설정
     useEffect(() => {
         setCurrentImage(
             alignment === 'auto' ?
@@ -113,24 +103,25 @@ function Manage(){
         setControlPanel(alignment === 'control')
     }, [alignment])
 
+    // ROS 연결
     useEffect(() => {
-        // ROS에 연결
         const ros = new ROSLIB.Ros({
             url: 'ws://192.168.0.13:9090'
         });
 
         ros.on('connection', () => {
-            console.log('웹소켓 서버에 연결되었습니다.');
+            // console.log('웹소켓 서버에 연결되었습니다.');
         });
 
         ros.on('error', (error) => {
-            console.log('웹소켓 서버 연결 오류: ', error);
+            // console.log('웹소켓 서버 연결 오류: ', error);
         });
 
         ros.on('close', () => {
-            console.log('웹소켓 서버 연결이 닫혔습니다.');
+            // console.log('웹소켓 서버 연결이 닫혔습니다.');
         });
 
+        // ROS 토픽 설정
         const motorServiceInstance = new ROSLIB.Service({
             ros: ros,
             name: '/handling',
@@ -143,13 +134,6 @@ function Manage(){
             messageType: 'std_msgs/String'
         });
 
-        // // states 바꿀 때 쓰려는 topic
-        // const statesTopic = new ROSLIB.Topic({
-        //     ros: ros,
-        //     name: './states',
-        //     messageType: 'std_msgs/states'
-        // });
-
         setRos(ros);
         setMotorService(motorServiceInstance);
 
@@ -160,16 +144,12 @@ function Manage(){
         };
     }, []);
 
-
+    // auto, control 토글 설정
     const handleChange = (event, newAlignment) => {
-        console.log(newAlignment)
         setAlignment(newAlignment);
     };
 
-    const handleStates = () => {
-        console.log()
-    }
-
+    // 젯봇미니 서비스 통신 (조종)
     const handleControl = (direction) => {
         if (!motorService) return;
 
@@ -180,33 +160,32 @@ function Manage(){
             case 'forward':
                 rightspeed = 0.5;
                 leftspeed = 0.5;
-                console.log('forward');
+                // console.log('forward');
                 break;
             case 'backward':
                 rightspeed = -0.5;
                 leftspeed = -0.5;
-                console.log('backward');
+                // console.log('backward');
                 break;
             case 'left':
                 rightspeed = -0.5;
                 leftspeed = 0.5;
-                console.log('left');
+                // console.log('left');
                 break;
             case 'right':
                 rightspeed = 0.5;
                 leftspeed = -0.5;
-                console.log('right');
+                // console.log('right');
                 break;
             case 'stop':
                 rightspeed = 0.0;
                 leftspeed = 0.0;
-                console.log('stop');
+                // console.log('stop');
                 break;
             default:
                 break;
         }
 
-        
         topic_context.setTopicButton(true)
 
         const request = new ROSLIB.ServiceRequest({
@@ -215,7 +194,7 @@ function Manage(){
         });
 
         motorService.callService(request, (result) => {
-            console.log('Result for service call on ', direction, ': ', result);
+            // console.log('Result for service call on ', direction, ': ', result);
         });
     };
 
