@@ -33,6 +33,11 @@ import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import RecommendIcon from '@mui/icons-material/Recommend';
 import { useResizeDetector } from 'react-resize-detector';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip as ChartTooltip, Legend } from 'chart.js';
+import { Bar as ChartBar } from 'react-chartjs-2';
+import YesterdayChart from '../../components/YesterdayChart';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend);
 
 
 
@@ -152,9 +157,72 @@ const Main = React.memo(() => {
     refreshRate: 300,
   });
 
-  console.log("my_context", my_context.user)
-  console.log("topic_context", topic_context)
-  console.log("topic_context", topic_context.topicButton)
+  // const [yesterdayChartData, setYesterdayChartData] = useState(null);
+
+  // const chartOptions = {
+  //   responsive: true,
+  //   plugins: {
+  //     legend: {
+  //       position: 'top',
+  //     },
+  //     title: {
+  //       display: true,
+  //       text: '어제의 온습도 데이터',
+  //     },
+  //   },
+  //   scales: {
+  //     y: {
+  //       beginAtZero: true,
+  //       max: 100, // 습도의 최대값을 고려하여 설정
+  //     },
+  //   },
+  // };
+
+  // useEffect(() => {
+  //   const fetchYesterdayData = async () => {
+  //     const uid = localStorage.getItem('uid');
+
+  //     try {
+  //       const response = await axios.get('http://localhost:8080/api/yesterdaySummary', {
+  //         params: { uid: uid }
+  //       });
+  //       const data = response.data;
+        
+  //       setYesterdayChartData({
+  //         labels: ['최고', '최저', '평균'],
+  //         datasets: [
+  //           {
+  //             label: '온도 (°C)',
+  //             data: [data.maxTemperature, data.minTemperature, data.avgTemperature],
+  //             backgroundColor: 'rgba(255, 99, 132, 0.5)',
+  //             borderColor: 'rgb(255, 99, 132)',
+  //             borderWidth: 1,
+  //           },
+  //           {
+  //             label: '습도 (%)',
+  //             data: [data.maxHumidity, data.minHumidity, data.avgHumidity],
+  //             backgroundColor: 'rgba(53, 162, 235, 0.5)',
+  //             borderColor: 'rgb(53, 162, 235)',
+  //             borderWidth: 1,
+  //           },
+  //         ],
+  //       });
+
+  //       setYesterdayData({
+  //         avg_temperature: data.avgTemperature.toFixed(1),
+  //         avg_humidity: data.avgHumidity.toFixed(1)
+  //       });
+  //     } catch (error) {
+  //       console.error("Error fetching yesterday's data:", error);
+  //     }
+  //   };
+
+  //   fetchYesterdayData();
+  // }, []);
+
+  // console.log("my_context", my_context.user)
+  // console.log("topic_context", topic_context)
+  // console.log("topic_context", topic_context.topicButton)
 
    // 로그인 관련
    useEffect(() => {
@@ -406,48 +474,6 @@ const Main = React.memo(() => {
     setUpdateFlag(false)
   }, [sensorData])
 
-  // 어제의 온습도 
-  useEffect(() => {
-    const { avg_temperature, avg_humidity } = yesterdayData
-    const uid = localStorage.getItem('uid');
-    axios.get('http://localhost:8080/api/yesterdaySummary', {
-      params:{
-        uid: uid
-      }
-    })
-    .then((retval) => {
-      setYesterdayData({
-        avg_temperature: retval.data[0].avgTemperature.toFixed(1),
-        avg_humidity: retval.data[0].avgHumidity.toFixed(1)
-      })
-    }).catch((retval) => {
-      console.log("Error@@", retval)
-    })
-  }, []);
-
-  useEffect(() => {
-    // 어제 날짜의 시간별 데이터를 가져오는 함수
-    const fetchYesterdayHourlyData = async () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const formattedDate = yesterday.toISOString().split('T')[0];
-
-      try {
-        const response = await axios.get(`http://localhost:8080/api/hourlyData`, {
-          params: {
-            date: formattedDate,
-            uid: localStorage.getItem('uid')
-          }
-        });
-        setYesterdayHourlyData(response.data);
-      } catch (error) {
-        console.error("Error fetching yesterday's hourly data:", error);
-      }
-    };
-
-    fetchYesterdayHourlyData();
-  }, []);
-
   // 실시간 시간 업데이트를 위한 useEffect
   useEffect(() => {
     const timer = setInterval(() => {
@@ -461,20 +487,6 @@ const Main = React.memo(() => {
     return <div>Loading...</div>;
   }
 
-  // const getWeatherStatusMessage = (temperature, humidity) => {
-  //   if (temperature >= 20 && temperature <= 25 && humidity >= 40 && humidity <= 60) {
-  //     return { message: "적정 온습도입니다.", severity: "success" };
-  //   } else if (temperature < 20) {
-  //     return { message: "온도가 낮습니다. 난방이 필요합니다.", severity: "warning" };
-  //   } else if (temperature > 25) {
-  //     return { message: "온도가 높습니다. 환기가 필요합니다.", severity: "warning" };
-  //   } else if (humidity < 40) {
-  //     return { message: "습도가 낮습니다. 가습이 필요합니다.", severity: "warning" };
-  //   } else if (humidity > 60) {
-  //     return { message: "습도가 높습니다. 환기가 필요합니다.", severity: "warning" };
-  //   }
-  //   return { message: "온습도를 확인해주세요.", severity: "info" };
-  // };
 
   const getChangeIndicator = (change) => {
     if (change > 0) {
@@ -583,14 +595,6 @@ const Main = React.memo(() => {
                       </Typography>
                     </GaugeContainer>
 
-                    {/* 날씨 상태 메시지 */}
-                    {/* <StatusAlert 
-                      severity={getWeatherStatusMessage(sensorData.temperature, sensorData.humidity).severity}
-                      icon={<WarningIcon />}
-                    >
-                      {getWeatherStatusMessage(sensorData.temperature, sensorData.humidity).message}
-                    </StatusAlert> */}
-
                     {/* 온습도 변화 추이 */}
                     <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
                       <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>온습도 변화 추이</Typography>
@@ -652,27 +656,14 @@ const Main = React.memo(() => {
                   <StyledCardContent>
                     <CardTitle variant="h5">
                       <InsertChartIcon sx={{ mr: 1 }} />
-                      전날 평균 온습도
+                      전날 온습도 데이터
                     </CardTitle>
-                    <Box ref={ref} sx={{ height: 'calc(100% - 40px)', minHeight: '300px' }}>
-                      {width && height && (
-                        <ResponsiveContainer width={width} height={height}>
-                          <LineChart data={yesterdayHourlyData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="time" />
-                            <YAxis yAxisId="left" />
-                            <YAxis yAxisId="right" orientation="right" />
-                            <Tooltip />
-                            <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#8884d8" name="온도" />
-                            <Line yAxisId="right" type="monotone" dataKey="humidity" stroke="#82ca9d" name="습도" />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      )}
+                    <Box sx={{ height: 'calc(100% - 40px)', width: '100%' }}>  {/* 높이를 조정 */}
+                      <YesterdayChart />
                     </Box>
                   </StyledCardContent>
                 </StyledCard>
               </Grid>
-
               {/* Robot Condition 카드 */}
               <Grid item xs={12} md={4}>
                 <StyledCard>
@@ -752,7 +743,7 @@ const Main = React.memo(() => {
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <SportsEsportsIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
                         <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                          관리 페이지
+                          Monitoring
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -782,7 +773,7 @@ const Main = React.memo(() => {
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <ViewInArIcon sx={{ fontSize: 40, color: 'secondary.main', mr: 2 }} />
                         <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
-                          객체 확인 페이지
+                          Detection
                         </Typography>
                       </Box>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Tabs, Tab, Button, useMediaQuery, Typography } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import ROSLIB from 'roslib';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import { topicButtonContext } from '../../App'
 
 const MainContainer = styled('div')({
     display: 'flex',
@@ -101,12 +102,13 @@ function Manage(){
     const [motorService, setMotorService] = useState(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const topic_context = useContext(topicButtonContext);
 
     useEffect(() => {
         setCurrentImage(
             alignment === 'auto' ?
             'http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw' :
-            'http://192.168.0.13:8080/stream?topic=/usb_cam2/image_raw'
+            'http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw'
         )
         setControlPanel(alignment === 'control')
     }, [alignment])
@@ -204,6 +206,9 @@ function Manage(){
                 break;
         }
 
+        
+        topic_context.setTopicButton(true)
+
         const request = new ROSLIB.ServiceRequest({
             rightspeed: rightspeed,
             leftspeed: leftspeed
@@ -299,9 +304,6 @@ function Manage(){
                     )}
                 </ImageContainer>
             </CardContainer>
-            {/* <Typography variant="body1" style={{ marginTop: '20px' }}>
-                현재 모드: <strong>{alignment === 'auto' ? '자동' : '수동'}</strong>
-            </Typography> */}
         </MainContainer>
     )
 }
