@@ -9,7 +9,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import dayjs from 'dayjs';
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
-import LineChartComponent from '../../components/LineChartComponent';
+// import LineChartComponent from '../../components/LineChartComponent';
+import BarChartComponent from '../../components/BarChartComponent';
 
 // Object.keys 폴리필
 if (!Object.keys) {
@@ -265,12 +266,11 @@ function Object() {
     return (
       <MainContainer>
         <CardContainer>
-          {/* 실시간 영상 스트리밍을 표시하는 카드 */}
-          <Card style={{ width: '100%', height: isSmallScreen ? 'auto' : '400px', textAlign: 'center' }}>
-            <LineChartComponent />
+          <Card style={{ width: '100%', height: isSmallScreen ? 'auto' : '100%', textAlign: 'center' }}>
+            <BarChartComponent />
           </Card>
           {/* 선택된 이미지를 표시하는 카드 */}
-          <Card style={{ width: '100%', height: isSmallScreen ? 'auto' : '400px', textAlign: 'center'}}>
+          <Card style={{ width: '100%', height: isSmallScreen ? 'auto' : '370px', textAlign: 'center'}}>
             <img 
               src={selectedImage || '/camera.png'}
               alt="검출된 토마토 사진"

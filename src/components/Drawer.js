@@ -176,9 +176,9 @@ export default function MiniDrawer({ children }) {
   // 일반 메뉴 아이템
   const menuItems = [
     { text: '홈', icon: <HomeIcon />, path: '/main' },
-    { text: '객체 확인 페이지', icon: <ViewInArIcon />, path: '/obj' },
-    { text: '관리페이지', icon: <SportsEsportsIcon />, path: '/manage' },
-    { text: '고객 문의', icon: <QuestionAnswerIcon />, path: '/cs' },
+    { text: '탐지내역', icon: <ViewInArIcon />, path: '/obj' },
+    { text: '모니터링', icon: <SportsEsportsIcon />, path: '/manage' },
+    { text: '고객문의', icon: <QuestionAnswerIcon />, path: '/cs' },
   ];
 
   // Handler to open modal

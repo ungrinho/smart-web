@@ -146,9 +146,6 @@ export const CS = () => {
 
   return (
     <StyledContainer maxWidth="lg">
-      <Typography variant="h4" component="h1" align="center" sx={{ mt: 10, mb: 4, fontWeight: 'bold' }}>
-        고객 지원 센터
-      </Typography>
       <Grid container spacing={4}>
         {/* 자주 묻는 질문 섹션 */}
         <Grid item xs={12} md={5}>

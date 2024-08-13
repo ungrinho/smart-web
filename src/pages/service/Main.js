@@ -157,75 +157,44 @@ const Main = React.memo(() => {
     refreshRate: 300,
   });
 
-  // const [yesterdayChartData, setYesterdayChartData] = useState(null);
+  const [yesterdayAvg, setYesterdayAvg] = useState({ avg_temperature: null, avg_humidity: null });
 
-  // const chartOptions = {
-  //   responsive: true,
-  //   plugins: {
-  //     legend: {
-  //       position: 'top',
-  //     },
-  //     title: {
-  //       display: true,
-  //       text: '어제의 온습도 데이터',
-  //     },
-  //   },
-  //   scales: {
-  //     y: {
-  //       beginAtZero: true,
-  //       max: 100, // 습도의 최대값을 고려하여 설정
-  //     },
-  //   },
-  // };
+  useEffect(() => {
+    const fetchYesterdayAvg = async () => {
+      const uid = localStorage.getItem('uid');
+      if (uid) {
+        try {
+          const response = await axios.get('http://localhost:8080/api/yesterdaySummary', {
+            params: { uid: uid }
+          });
+          const data = response.data[0];
+          setYesterdayAvg({
+            avg_temperature: parseFloat(data.avgTemperature).toFixed(1),
+            avg_humidity: parseFloat(data.avgHumidity).toFixed(1)
+          });
+        } catch (error) {
+          console.error("Error fetching yesterday's average data:", error);
+        }
+      }
+    };
 
-  // useEffect(() => {
-  //   const fetchYesterdayData = async () => {
-  //     const uid = localStorage.getItem('uid');
+    fetchYesterdayAvg();
+  }, []);
 
-  //     try {
-  //       const response = await axios.get('http://localhost:8080/api/yesterdaySummary', {
-  //         params: { uid: uid }
-  //       });
-  //       const data = response.data;
-        
-  //       setYesterdayChartData({
-  //         labels: ['최고', '최저', '평균'],
-  //         datasets: [
-  //           {
-  //             label: '온도 (°C)',
-  //             data: [data.maxTemperature, data.minTemperature, data.avgTemperature],
-  //             backgroundColor: 'rgba(255, 99, 132, 0.5)',
-  //             borderColor: 'rgb(255, 99, 132)',
-  //             borderWidth: 1,
-  //           },
-  //           {
-  //             label: '습도 (%)',
-  //             data: [data.maxHumidity, data.minHumidity, data.avgHumidity],
-  //             backgroundColor: 'rgba(53, 162, 235, 0.5)',
-  //             borderColor: 'rgb(53, 162, 235)',
-  //             borderWidth: 1,
-  //           },
-  //         ],
-  //       });
+  const getChangeIndicator = (current, yesterday) => {
+    if (!current || !yesterday) return <span>데이터 없음</span>;
+    const change = (current - yesterday).toFixed(1);
+    if (change > 0) {
+      return <span style={{ color: 'red' }}>▲{change}</span>;
+    } else if (change < 0) {
+      return <span style={{ color: 'blue' }}>▼{Math.abs(change)}</span>;
+    } else {
+      return <span>변화없음</span>;
+    }
+  };
 
-  //       setYesterdayData({
-  //         avg_temperature: data.avgTemperature.toFixed(1),
-  //         avg_humidity: data.avgHumidity.toFixed(1)
-  //       });
-  //     } catch (error) {
-  //       console.error("Error fetching yesterday's data:", error);
-  //     }
-  //   };
-
-  //   fetchYesterdayData();
-  // }, []);
-
-  // console.log("my_context", my_context.user)
-  // console.log("topic_context", topic_context)
-  // console.log("topic_context", topic_context.topicButton)
-
-   // 로그인 관련
-   useEffect(() => {
+  // 로그인 관련
+  useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
         localStorage.setItem("uid", user.uid)
@@ -246,7 +215,7 @@ const Main = React.memo(() => {
       console.log(response.data)
     } catch (error) {
       console.error("Error fetching farm name:", error);
-      setFarmName("아무개의 농장"); // Default name if there's an error
+      setFarmName("사용자"); // Default name if there's an error
     }
   };
   
@@ -488,16 +457,6 @@ const Main = React.memo(() => {
   }
 
 
-  const getChangeIndicator = (change) => {
-    if (change > 0) {
-      return <span style={{ color: 'red' }}>▲{change}</span>;
-    } else if (change < 0) {
-      return <span style={{ color: 'blue' }}>▼{Math.abs(change)}</span>;
-    } else {
-      return <span>변화없음</span>;
-    }
-  };
-
   const getTemperatureColor = (temp) => {
     if (temp < 10) return '#3f51b5'; // 파랑 (춥다)
     if (temp < 20) return '#4caf50'; // 초록 (적정)
@@ -567,9 +526,6 @@ const Main = React.memo(() => {
                           }}
                         />
                       </Box>
-                      <Typography variant="caption" sx={{ ml: 1 }}>
-                        {getChangeIndicator(sensorData.temperature - yesterdayData.avg_temperature)}
-                      </Typography>
                     </GaugeContainer>
 
                     {/* 습도 게이지 */}
@@ -590,9 +546,6 @@ const Main = React.memo(() => {
                           }}
                         />
                       </Box>
-                      <Typography variant="caption" sx={{ ml: 1 }}>
-                        {getChangeIndicator(sensorData.humidity - yesterdayData.avg_humidity)}
-                      </Typography>
                     </GaugeContainer>
 
                     {/* 온습도 변화 추이 */}
@@ -601,14 +554,14 @@ const Main = React.memo(() => {
                       <Grid container spacing={2}>
                         <Grid item xs={6}>
                           <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                            <TrendingUpIcon sx={{ mr: 1, color: 'red' }} />
-                            온도: {getChangeIndicator(sensorData.temperature - yesterdayData.avg_temperature)}
+                            <DeviceThermostatIcon sx={{ mr: 1, color: 'error.main' }} />
+                            {getChangeIndicator(parseFloat(sensorData.temperature), parseFloat(yesterdayAvg.avg_temperature))}
                           </Typography>
                         </Grid>
                         <Grid item xs={6}>
                           <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                            <TrendingUpIcon sx={{ mr: 1, color: 'blue' }} />
-                            습도: {getChangeIndicator(sensorData.humidity - yesterdayData.avg_humidity)}
+                            <OpacityIcon sx={{ mr: 1, color: 'info.main' }} />
+                            {getChangeIndicator(parseFloat(sensorData.humidity), parseFloat(yesterdayAvg.avg_humidity))}
                           </Typography>
                         </Grid>
                       </Grid>

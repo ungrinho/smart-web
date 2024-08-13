@@ -256,9 +256,6 @@ function Manage(){
 
     return(
         <MainContainer>
-            <Typography variant="h4" component="h1" gutterBottom>
-                로봇 관리 페이지
-            </Typography>
             <StyledTabs 
                 value={alignment} 
                 onChange={handleChange} 
