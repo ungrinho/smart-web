@@ -170,7 +170,7 @@ const Main = React.memo(() => {
       // console.log(response.data)
     } catch (error) {
       // console.error("Error fetching farm name:", error);
-      setFarmName("아무개의 농장");
+      setFarmName("아무개");
     }
   };
 
