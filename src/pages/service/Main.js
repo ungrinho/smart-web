@@ -237,26 +237,12 @@ const Main = React.memo(() => {
     // ROS 상태 수신 (배터리, 작동중)
     statesListener.subscribe((message) => {
       // console.log("이것이 메시지 :", message.data)
-
       const topics = message.data.split(",")
-      if (topics[0] !== lastBattery) {
-        switch(topics[0]){
-          case 'Battery_High' :
-            setRobotBattery('Battery_High')
-            break;
-          
-          case 'Battery_Medium' :
-            setRobotBattery('Battery_Medium')
-            break;
+      const batteryTopic = Number(topics[0])
+ 
+      const batteryPercentage = Math.round((batteryTopic / 12.5) * 100);
 
-          case 'Battery_Low' :
-            setRobotBattery('Battery_Low')
-            break;
-          default:
-            setRobotBattery('');
-        }
-        lastBattery = topics[0];
-      }
+      setRobotBattery(batteryPercentage)
 
       if (topics[1] !== lastStatus){
         switch(topics[1]){
@@ -614,28 +600,27 @@ const Main = React.memo(() => {
                     <Box display="flex" alignItems="center" mb={2}>
                       <Tooltip title="배터리 상태">
                         <BatteryChargingFullIcon sx={{ fontSize: 30, mr: 1, color: 
-                          robotBattery === 'Battery_High' ? '#4caf50' : 
-                          robotBattery === 'Battery_Medium' ? '#ff9800' : '#f44336'
+                          robotBattery > 60 ? '#4caf50' : 
+                          robotBattery > 20 ? '#ff9800' : '#f44336'
                         }} />
                       </Tooltip>
                       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         <LinearProgress
                           variant="determinate"
-                          value={robotBattery === 'Battery_High' ? 100 : robotBattery === 'Battery_Medium' ? 50 : 20}
+                          value={robotBattery}
                           sx={{ 
                             flexGrow: 1,
                             height: 10, 
                             borderRadius: 5,
                             backgroundColor: '#e0e0e0',
                             '& .MuiLinearProgress-bar': {
-                              backgroundColor: robotBattery === 'Battery_High' ? '#4caf50' : 
-                                               robotBattery === 'Battery_Medium' ? '#ff9800' : '#f44336',
+                              backgroundColor: robotBattery > 60 ? '#4caf50' : 
+                                               robotBattery > 20 ? '#ff9800' : '#f44336',
                             },
                           }}
                         />
                         <Typography variant="body2" sx={{ ml: 1, minWidth: '50px', fontWeight: 'bold' }}>
-                          {robotBattery === 'Battery_High' ? '높음' : 
-                           robotBattery === 'Battery_Medium' ? '중간' : '낮음'}
+                          {robotBattery + '%'}
                         </Typography>
                       </Box>
                     </Box>

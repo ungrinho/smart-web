@@ -38,13 +38,30 @@ function ROSAlarm({ onNotification }) {
       statesListener.subscribe((message) => {
         // console.log("Received message:", message.data);
         const topics = message.data.split(",");
-        handleBatteryStatus(topics[0]);
+        const batteryTopic = Number(topics[0]);
+        const batteryPercentage = Math.round((batteryTopic / 12.5) * 100);
+        handleBatteryStatus(batteryPercentage);
+        // console.log(batteryPercentage)
         handleDriveStatus(topics[1]);
       });
     };
 
     // 배터리 상태 처리 함수
     const handleBatteryStatus = (status) => {
+
+      if (status > 60){
+        status = 'Battery_High'
+      }
+      else if (status > 40){
+        status = "Battery_Medium"
+      }
+      else if (0 < status <= 20 ){
+        status = "Battery_Low"
+      }
+      else if ( status == 0 ){
+        status = "Battery_Zero"
+      }
+
       if (status !== currentBatteryStatus) {
         setCurrentBatteryStatus(status);
         switch (status) {
