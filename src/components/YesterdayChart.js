@@ -102,7 +102,7 @@ function YesterdayChart() {
       },
       title: {
         display: true,
-        text: '전날의 온습도 데이터',
+        text: 'Yesterday Data',
       },
     },
     scales: {

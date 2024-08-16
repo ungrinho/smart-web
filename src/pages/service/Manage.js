@@ -37,8 +37,10 @@ const ControlButton = styled(Button)(({ theme }) => ({
     fontSize: '15px',
     opacity: '0.7',
     padding: 0,
+    backgroundColor: 'white',
     '&:hover': {
         opacity: 1,
+        backgroundColor: theme.palette.common.white,
     },
     [theme.breakpoints.down('sm')]: {
         fontSize: '12px',
@@ -98,7 +100,7 @@ function Manage(){
         setCurrentImage(
             alignment === 'auto' ?
             'http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw' :
-            'http://192.168.0.13:8080/stream?topic=/usb_cam1/image_raw'
+            'http://192.168.0.13:8080/stream?topic=/usb_cam2/image_raw'
         )
         setControlPanel(alignment === 'control')
     }, [alignment])

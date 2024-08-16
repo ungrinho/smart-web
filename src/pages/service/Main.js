@@ -342,7 +342,6 @@ const Main = React.memo(() => {
           setSentSensorData({ 
             temperature: temperature.toFixed(1), 
             humidity: humidity.toFixed(1),
-            timestamp: new Date().toISOString() // 현재 시간을 ISO 문자열로 저장
           });
         } else {
           // console.error('Invalid number in data:', data);
@@ -558,11 +557,11 @@ const Main = React.memo(() => {
 
               {/* 전날 평균 온습도 카드 */}
               <Grid item xs={12} md={8}>
-                <StyledCard hoverable onClick={() => setIsChartModalOpen(true)}>
+                <StyledCard hoverable onClick={() => setIsChartModalOpen(true)} style={{ cursor: 'pointer'}}>
                   <StyledCardContent>
                     <CardTitle variant="h5">
                       <InsertChartIcon sx={{ mr: 1 }} />
-                      전날 온습도 데이터
+                      온습도 데이터 조회
                     </CardTitle>
                     <Box sx={{ height: 'calc(100% - 40px)', width: '100%' }}>  {/* 높이를 조정 */}
                       <YesterdayChart />
@@ -708,7 +707,7 @@ const Main = React.memo(() => {
       <ChartModal
         open={isChartModalOpen}
         onClose={() => setIsChartModalOpen(false)}
-        title="평균 온습도 조회 (90일)"
+        title="최근 데이터 조회"
       />
 
       {/* 알림 모달 */}
