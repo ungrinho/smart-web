@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import { Bar } from 'react-chartjs-2';
 import { Box } from '@mui/material'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -37,13 +38,14 @@ function YesterdayChart() {
 
   useEffect(() => {
     const uid = localStorage.getItem('uid');
-    
-    axios.get('http://localhost:8080/api/yesterdaySummary', {
-      params: { uid: uid }
+    const formattedDate = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+    // console.log(formattedDate)
+    axios.get('http://localhost:8080/api/dailySummary', {
+      params: { uid: uid, date: formattedDate}
     })
     .then((response) => {
       const data = response.data[0];
-      // console.log(data)
+      // console.log(response)
       setDailySummary({
         avg_temperature: data.avgTemperature.toFixed(1),
         avg_humidity: data.avgHumidity.toFixed(1),
@@ -63,7 +65,7 @@ function YesterdayChart() {
       });
     })
     .catch((error) => {
-      // console.error("Error fetching data:", error);
+      console.error("Error fetching data:", error); 
     });
   }, []);
 
